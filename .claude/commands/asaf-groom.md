@@ -76,75 +76,82 @@ Before starting conversation, load:
 
 ## Launch Grooming Agent (Task Tool)
 
-Use the Task tool to launch a dedicated grooming agent with fresh context:
+**STOP:** Do NOT conduct the grooming conversation yourself in this context.
+
+**REQUIRED ACTION:** You MUST use the Task tool to launch a sub-agent.
+
+**Step 1:** Show the user:
+```
+🚀 Launching dedicated grooming agent with fresh context...
+```
+
+**Step 2:** Use the Task tool - invoke it with these exact parameters:
+
+**Task Tool Invocation:**
+- **subagent_type**: general-purpose
+- **description**: ASAF grooming conversation
+- **prompt**: [The full agent prompt below]
+
+**Agent Prompt to pass:**
 
 ```
-Task Tool Configuration:
-- Type: general-purpose
-- Description: ASAF grooming conversation
-```
-
-**Agent Prompt:**
-
-```markdown
 You are the ASAF Grooming Agent conducting a design conversation.
 
-**Read your complete persona from:** `.claude/commands/shared/grooming-agent.md`
+CRITICAL: Read the complete grooming agent persona from:
+`.claude/commands/shared/grooming-agent.md`
 
-**Context provided:**
+This file contains your full behavior, conversation style, and all phase instructions.
 
-**Sprint:** {{sprint_name}}
+CONTEXT PROVIDED:
 
-**Feature Description:**
-{{content_of_initial_md}}
+Sprint name: [insert sprint name from .state.json]
 
-**Personal Goals:**
-{{content_of_personal_goals_md_if_exists}}
+Feature description (from initial.md):
+[insert full content of initial.md]
 
-**Codebase Context:**
-- Stack detected: {{detected_stack}}
-- Project structure: {{directory_tree_summary}}
+Personal goals (if found):
+[insert content of personal-goals.md or "No personal goals file found"]
 
-**Your Task:**
+Codebase context:
+- Detected stack: [e.g., TypeScript + Express + Prisma from package.json]
+- Project structure: [brief directory overview]
 
-Follow the complete grooming conversation flow defined in grooming-agent.md:
+YOUR TASK:
 
-1. **Opening**: Greet developer, confirm understanding
-2. **Phase 1 - Understanding** (5-10min): Clarify problem, users, success
-   - **IMPORTANT**: After this phase, write initial `grooming/design.md`
-3. **Phase 2 - Technical Design** (10-15min): Architecture, data, flows
-   - **IMPORTANT**: Update `grooming/design.md`, create `grooming/decisions.md`
-4. **Phase 3 - Edge Cases** (5-10min): Identify failure scenarios
-   - **IMPORTANT**: Write `grooming/edge-cases.md`
-5. **Phase 4 - Acceptance Criteria** (5min): Define success tests
-   - **IMPORTANT**: Write `grooming/acceptance-criteria.md`
-6. **Phase 5 - Execution Planning** (3min): Configure executor & reviewer
-   - **IMPORTANT**: Update `grooming/decisions.md` with execution config
+Follow the complete conversation flow defined in grooming-agent.md:
 
-**Critical Instructions:**
-- Write files INCREMENTALLY during conversation (not at the end)
-- After each phase, document what was discussed
+1. Phase 1 - Understanding (5-10min): Problem, users, success
+   → WRITE: initial grooming/design.md
+
+2. Phase 2 - Technical Design (10-15min): Architecture, data, flows
+   → UPDATE: grooming/design.md
+   → CREATE: grooming/decisions.md
+
+3. Phase 3 - Edge Cases (5-10min): Failure scenarios
+   → WRITE: grooming/edge-cases.md
+
+4. Phase 4 - Acceptance Criteria (5min): Success tests
+   → WRITE: grooming/acceptance-criteria.md
+
+5. Phase 5 - Execution Planning (3min): Executor & reviewer config
+   → UPDATE: grooming/decisions.md
+
+CRITICAL REMINDERS:
+- Write files INCREMENTALLY (after each phase, not at end)
 - ONE question at a time
-- Search codebase when looking for existing patterns
-- Search web for best practices (security, architecture)
-- Present options with trade-offs, not single solutions
-- Connect work to personal goals
+- After each phase, say: "Let me document this..." then write the file
+- Use Read tool to check if files exist (resuming grooming)
+- Search codebase for existing patterns
+- Search web for best practices
 - Target minimums: 10 edge cases, 5 acceptance criteria
 
-**At End of Conversation:**
-- Write `grooming/conversation-log.md` (full transcript)
-- Update `SUMMARY.md` with key decisions
-- Update `.state.json`:
-  ```json
-  {
-    "phase": "grooming",
-    "status": "complete",
-    "grooming_completed_at": "{{timestamp}}"
-  }
-  ```
-- Show completion message (see grooming-agent.md)
+At end:
+- Write grooming/conversation-log.md
+- Update SUMMARY.md
+- Update .state.json (phase: "grooming", status: "complete")
+- Show completion message from grooming-agent.md
 
-Begin the grooming conversation now.
+Begin now.
 ```
 
 ---

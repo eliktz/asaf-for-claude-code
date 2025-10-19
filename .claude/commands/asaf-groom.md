@@ -74,55 +74,139 @@ Before starting conversation, load:
 
 ---
 
-## Adopt Grooming Agent Persona
+## Launch Grooming Agent (Task Tool)
 
-**From this point forward, adopt the Grooming Agent persona.**
+Use the Task tool to launch a dedicated grooming agent with fresh context:
 
-Full persona defined in: `.claude/commands/shared/grooming-agent.md`
+```
+Task Tool Configuration:
+- Type: general-purpose
+- Description: ASAF grooming conversation
+```
 
-Key behaviors:
-- Curious, thorough, educational
+**Agent Prompt:**
+
+```markdown
+You are the ASAF Grooming Agent conducting a design conversation.
+
+**Read your complete persona from:** `.claude/commands/shared/grooming-agent.md`
+
+**Context provided:**
+
+**Sprint:** {{sprint_name}}
+
+**Feature Description:**
+{{content_of_initial_md}}
+
+**Personal Goals:**
+{{content_of_personal_goals_md_if_exists}}
+
+**Codebase Context:**
+- Stack detected: {{detected_stack}}
+- Project structure: {{directory_tree_summary}}
+
+**Your Task:**
+
+Follow the complete grooming conversation flow defined in grooming-agent.md:
+
+1. **Opening**: Greet developer, confirm understanding
+2. **Phase 1 - Understanding** (5-10min): Clarify problem, users, success
+   - **IMPORTANT**: After this phase, write initial `grooming/design.md`
+3. **Phase 2 - Technical Design** (10-15min): Architecture, data, flows
+   - **IMPORTANT**: Update `grooming/design.md`, create `grooming/decisions.md`
+4. **Phase 3 - Edge Cases** (5-10min): Identify failure scenarios
+   - **IMPORTANT**: Write `grooming/edge-cases.md`
+5. **Phase 4 - Acceptance Criteria** (5min): Define success tests
+   - **IMPORTANT**: Write `grooming/acceptance-criteria.md`
+6. **Phase 5 - Execution Planning** (3min): Configure executor & reviewer
+   - **IMPORTANT**: Update `grooming/decisions.md` with execution config
+
+**Critical Instructions:**
+- Write files INCREMENTALLY during conversation (not at the end)
+- After each phase, document what was discussed
 - ONE question at a time
-- Explain "why" behind suggestions
-- Connect to personal goals
-- Search codebase and web when helpful
-- Present options with trade-offs
+- Search codebase when looking for existing patterns
+- Search web for best practices (security, architecture)
+- Present options with trade-offs, not single solutions
+- Connect work to personal goals
+- Target minimums: 10 edge cases, 5 acceptance criteria
+
+**At End of Conversation:**
+- Write `grooming/conversation-log.md` (full transcript)
+- Update `SUMMARY.md` with key decisions
+- Update `.state.json`:
+  ```json
+  {
+    "phase": "grooming",
+    "status": "complete",
+    "grooming_completed_at": "{{timestamp}}"
+  }
+  ```
+- Show completion message (see grooming-agent.md)
+
+Begin the grooming conversation now.
+```
 
 ---
 
-## Opening Message
+## After Agent Completes
+
+When the grooming agent returns, verify files were created:
+
+**Check for:**
+- ✅ `grooming/design.md`
+- ✅ `grooming/edge-cases.md`
+- ✅ `grooming/acceptance-criteria.md`
+- ✅ `grooming/decisions.md`
+- ✅ `grooming/conversation-log.md`
+- ✅ `SUMMARY.md` updated
+- ✅ `.state.json` updated
+
+**If any missing:**
+```
+⚠️ Grooming incomplete - some files missing
+
+Expected files not found:
+- [list missing files]
+
+This may indicate the conversation was interrupted.
+
+Options:
+  /asaf-groom          - Resume grooming
+  /asaf-status         - Check current state
+```
+
+**If all present:**
+
+Show user the completion summary (agent already showed it, just confirm):
 
 ```
-Hi [developer-name]! 👋
+✅ Grooming completed successfully!
 
-Let's groom the "<sprint-name>" feature together.
+All documents created. Review them in grooming/ folder.
 
-I've reviewed your feature description:
-"[First 1-2 sentences from initial.md]"
-
-[If personal goals found]
-I also see you're working on:
-- [Goal 1]
-- [Goal 2]
-
-[If codebase context relevant]
-I noticed your project uses [stack] with [key patterns found].
-
-This grooming session will take about 30-45 minutes. We'll cover:
-1. Requirements clarification (what & why)
-2. Technical design (how)
-3. Edge cases (what could go wrong)
-4. Acceptance criteria (how to verify)
-5. Execution planning (agents & review style)
-
-Ready to begin?
+When ready to proceed:
+  /asaf-groom-approve
 ```
-
-Wait for user confirmation.
 
 ---
 
-## Conversation Flow
+## Why Use Task Tool?
+
+**Benefits:**
+- ✅ Fresh context for grooming (not accumulated from /asaf-init)
+- ✅ True separation between command orchestration and grooming conversation
+- ✅ Agent can re-read files if it forgets (files written incrementally)
+- ✅ Clearer state boundaries
+- ✅ User sees "Grooming agent running..." (clear what's happening)
+
+**Trade-offs:**
+- Agent start/stop messages visible to user
+- Need to explicitly pass context (but this is good - forces clarity)
+
+---
+
+## Original Conversation Flow (For Reference)
 
 ### Phase 1: Understanding (5-10 min)
 
@@ -677,7 +761,7 @@ _Updated after grooming session on [date]_
 ```
 ✅ Grooming complete!
 
-Generated documents:
+Documents created (written incrementally during our conversation):
   ✓ grooming/design.md (architecture, components, flows)
   ✓ grooming/edge-cases.md ([count] scenarios identified)
   ✓ grooming/acceptance-criteria.md ([count] criteria defined)
@@ -708,16 +792,13 @@ Updated SUMMARY.md with key information.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Please review the documents in grooming/ folder.
+**Next Step**: Please review the documents in grooming/ folder.
 
-When ready to proceed:
+When ready to proceed with implementation planning, run:
+
   /asaf-groom-approve
 
-To continue refining:
-  /asaf-groom-continue
-
-To view documents:
-  /asaf-groom-view
+This will lock grooming and generate the task breakdown.
 ```
 
 ---

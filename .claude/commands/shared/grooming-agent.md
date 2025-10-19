@@ -50,6 +50,33 @@
 
 **Search codebase** for similar implementations.
 
+**📝 After Phase 1: Write to `grooming/design.md`**
+
+Create initial design document with what we've learned:
+```markdown
+# Design Document: [Feature Name]
+
+## Overview
+[Problem statement and summary]
+
+## Users
+[Who will use this feature]
+
+## Goals
+[What success looks like]
+
+## Scope
+[What's in scope, what's deferred]
+
+## Related Features
+[Existing features this builds on or relates to]
+```
+
+Tell the developer:
+> "Let me document what we've discussed so far..."
+> [Write file]
+> "✓ Documented in grooming/design.md. You can review anytime."
+
 ---
 
 ### Phase 2: Technical Design (10-15 min)
@@ -67,6 +94,53 @@
 
 **Present trade-offs**, not just recommendations:
 > "JWT is stateless (good for scaling) but harder to revoke (security consideration). Sessions are simpler but require server-side storage. For your case of [context], I'd lean toward [X] because [reason]. Thoughts?"
+
+**📝 After Phase 2: Update `grooming/design.md`**
+
+Add technical details to the design document:
+```markdown
+## Architecture
+### Components
+[Component name and responsibilities]
+
+### Data Models
+[Schemas, fields, relationships]
+
+### User Flows
+[Step-by-step user flows]
+
+### Security Considerations
+[Security notes]
+
+### Performance Considerations
+[Scale, optimization notes]
+
+### Dependencies
+[Libraries, existing code to use]
+```
+
+**Also start `grooming/decisions.md`** for each decision:
+```markdown
+# Technical Decisions: [Feature Name]
+
+## Stack & Tooling
+[Language, framework, testing tools]
+
+## [Decision Topic 1]
+**Choice**: [What was chosen]
+**Alternatives Considered**: [Other options]
+**Rationale**: [Why this choice]
+
+## [Decision Topic 2]
+...
+```
+
+Tell the developer:
+> "Let me update the design with our technical approach..."
+> [Update design.md]
+> "✓ Updated grooming/design.md with architecture details."
+> [Write decisions.md]
+> "✓ Documented decisions in grooming/decisions.md."
 
 ---
 
@@ -91,14 +165,52 @@
 
 **Example dialogue**:
 > "Let's think about what could go wrong with login. What if a user enters the wrong password?"
-> 
+>
 > [Developer responds]
-> 
+>
 > "Good. Now, what if they enter the wrong password 10 times in a row? Should we block them?"
-> 
+>
 > [Developer responds]
-> 
+>
 > "That's rate limiting - common pattern is 5 attempts per 15 minutes. Sound reasonable?"
+
+**📝 After Phase 3: Write `grooming/edge-cases.md`**
+
+Document all edge cases discussed:
+```markdown
+# Edge Cases: [Feature Name]
+
+## Input Validation
+1. **[Edge Case Name]**
+   - **Scenario**: [What triggers it]
+   - **Handling**: [How to handle]
+   - **Test**: [How to test]
+
+[Continue for all input validation edge cases]
+
+## Authentication/Authorization
+[Edge cases for auth]
+
+## System Errors
+[Edge cases for system failures]
+
+## Security
+[Security-related edge cases]
+
+## Performance
+[Performance edge cases]
+
+## User Experience
+[UX edge cases]
+
+---
+**Total**: [Count] edge cases identified
+```
+
+Tell the developer:
+> "Let me document all the edge cases we've identified..."
+> [Write edge-cases.md]
+> "✓ Documented [count] edge cases in grooming/edge-cases.md."
 
 ---
 
@@ -116,14 +228,49 @@
 
 **Example**:
 > "Let's define how we'll know registration works. Here's what I'm thinking:
-> 
+>
 > **AC1: User Registration**
 > - As a new user, I want to create an account, so I can access features
 > - Test: Given valid email/password, when I submit, then account created and I'm logged in
 > - Edge cases: #1 (invalid email), #2 (duplicate email), #3 (weak password)
 > - DoD: Endpoint implemented, tests passing, validation working
-> 
+>
 > Does this capture what 'working registration' means?"
+
+**📝 After Phase 4: Write `grooming/acceptance-criteria.md`**
+
+Document all acceptance criteria:
+```markdown
+# Acceptance Criteria: [Feature Name]
+
+## AC1: [Capability Name]
+
+**User Story**: As a [user], I want [capability], so that [benefit]
+
+**Acceptance Test**:
+- Given [context]
+- When [action]
+- Then [outcome]
+
+**Edge Cases Covered**: ✅ #1, #3, #5
+
+**Definition of Done**:
+- [ ] [Implementation item]
+- [ ] [Test item]
+- [ ] [Documentation item]
+
+[Repeat for all criteria]
+
+---
+**Summary**:
+- Total Acceptance Criteria: [Count]
+- Estimated Tests: ~[Count]
+```
+
+Tell the developer:
+> "Let me document the acceptance criteria..."
+> [Write acceptance-criteria.md]
+> "✓ Documented [count] acceptance criteria in grooming/acceptance-criteria.md."
 
 ---
 
@@ -152,98 +299,41 @@
    - Default: executor → test → reviewer → executor
    - Special cases?
 
----
+**📝 After Phase 5: Update `grooming/decisions.md`**
 
-## Document Generation
-
-After conversation, generate these files in `grooming/`:
-
-### design.md
+Add execution configuration section:
 ```markdown
-# Design Document: [Feature Name]
-
-## Overview
-[1-2 paragraph summary]
-
-## Architecture
-### Components
-[List with responsibilities]
-
-### Data Models
-[Schemas with field descriptions]
-
-### User Flows
-[Step-by-step flows]
-
-### Security Considerations
-[Security notes]
-
-### Dependencies
-[New libraries, existing code to leverage]
-```
-
-### edge-cases.md
-```markdown
-# Edge Cases: [Feature Name]
-
-## Input Validation
-1. **[Edge Case Name]**
-   - Scenario: [What triggers it]
-   - Handling: [How to handle]
-   - Test: [How to test]
-
-[Grouped by category: Input, Authentication, System Errors, Security, Performance]
-
-Total: [Count] edge cases
-```
-
-### acceptance-criteria.md
-```markdown
-# Acceptance Criteria: [Feature Name]
-
-## AC1: [Capability]
-**User Story**: As a [user], I want [capability], so that [benefit]
-**Test**: Given [context], when [action], then [outcome]
-**Edge Cases**: ✅ #1, #3, #5
-**Definition of Done**:
-- [ ] [Checklist item]
-- [ ] [Checklist item]
-
-[Repeat for all criteria]
-
-## Summary
-Total: [Count] acceptance criteria
-Expected tests: ~[Count]
-```
-
-### decisions.md
-```markdown
-# Technical Decisions: [Feature Name]
-
-## Stack & Tooling
-Language: [Language]
-Framework: [Framework]
-Testing: [Testing framework]
-[Other tools]
-
-## Key Decisions
-### [Decision Topic]
-**Choice**: [What was chosen]
-**Alternatives**: [What else was considered]
-**Rationale**: [Why this choice]
-
 ## Execution Configuration
+
 **Executor Profile**: [profile-name]
-**Rationale**: [Why this profile]
+**Rationale**: [Why this profile - detected from codebase]
 
 **Reviewer Mode**: [Mode name]
-**Rationale**: [Based on personal goals/experience]
+**Rationale**: [Based on personal goals/experience level]
 
-**Max Iterations**: [Number per task]
+**Max Iterations Per Task**: [Number]
+**Rationale**: [Standard or adjusted for complexity]
 
 ## Out of Scope
-[Features deferred to future sprints]
+[Features explicitly deferred to future sprints]
 ```
+
+Tell the developer:
+> "Let me finalize the execution configuration..."
+> [Update decisions.md]
+> "✓ Added execution config to grooming/decisions.md."
+
+---
+
+## Final Document Generation
+
+**Files written incrementally during conversation:**
+- ✅ `grooming/design.md` (Phase 1 & 2)
+- ✅ `grooming/decisions.md` (Phase 2 & 5)
+- ✅ `grooming/edge-cases.md` (Phase 3)
+- ✅ `grooming/acceptance-criteria.md` (Phase 4)
+
+**Write at end of grooming:**
 
 ### conversation-log.md
 ```markdown
@@ -326,12 +416,12 @@ Grooming Agent: "Use JWT. It's the standard. Also, you need rate limiting, passw
 
 ## Completion Message
 
-After generating all documents:
+After writing conversation-log.md and updating SUMMARY.md:
 
 ```
 ✅ Grooming complete!
 
-Generated documents:
+All documents created (written incrementally during our conversation):
   - grooming/design.md (architecture, components, flows)
   - grooming/edge-cases.md ([count] scenarios)
   - grooming/acceptance-criteria.md ([count] criteria)
@@ -348,8 +438,13 @@ Updated SUMMARY.md with key decisions.
 **Personal Goal Alignment**:
 - This sprint will help with: [goal from personal-goals.md]
 
-Please review the documents. When ready:
+**Next Step**: Please review the documents above.
+
+When ready to proceed with implementation planning, run:
+
   /asaf-groom-approve
+
+This will lock grooming and generate the task breakdown.
 ```
 
 ---

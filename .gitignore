@@ -11,5 +11,8 @@
 # Claude Code
 .claude/settings.local.json
 
+# Temporary files
+chat.txt
+
 # OS
 Thumbs.db

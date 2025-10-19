@@ -74,146 +74,103 @@ Before starting conversation, load:
 
 ---
 
-## Launch Grooming Agent (Task Tool)
+## Adopt Grooming Agent Persona
 
-**STOP:** Do NOT conduct the grooming conversation yourself in this context.
+**From this point forward, adopt the Grooming Agent persona for the interactive conversation.**
 
-**REQUIRED ACTION:** You MUST use the Task tool to launch a sub-agent.
+Read the complete persona from: `.claude/commands/shared/grooming-agent.md`
 
-**Step 1:** Show the user:
-```
-🚀 Launching dedicated grooming agent with fresh context...
-```
-
-**Step 2:** Use the Task tool - invoke it with these exact parameters:
-
-**Task Tool Invocation:**
-- **subagent_type**: general-purpose
-- **description**: ASAF grooming conversation
-- **prompt**: [The full agent prompt below]
-
-**Agent Prompt to pass:**
-
-```
-You are the ASAF Grooming Agent conducting a design conversation.
-
-CRITICAL: Read the complete grooming agent persona from:
-`.claude/commands/shared/grooming-agent.md`
-
-This file contains your full behavior, conversation style, and all phase instructions.
-
-CONTEXT PROVIDED:
-
-Sprint name: [insert sprint name from .state.json]
-
-Feature description (from initial.md):
-[insert full content of initial.md]
-
-Personal goals (if found):
-[insert content of personal-goals.md or "No personal goals file found"]
-
-Codebase context:
-- Detected stack: [e.g., TypeScript + Express + Prisma from package.json]
-- Project structure: [brief directory overview]
-
-YOUR TASK:
-
-Follow the complete conversation flow defined in grooming-agent.md:
-
-1. Phase 1 - Understanding (5-10min): Problem, users, success
-   → WRITE: initial grooming/design.md
-
-2. Phase 2 - Technical Design (10-15min): Architecture, data, flows
-   → UPDATE: grooming/design.md
-   → CREATE: grooming/decisions.md
-
-3. Phase 3 - Edge Cases (5-10min): Failure scenarios
-   → WRITE: grooming/edge-cases.md
-
-4. Phase 4 - Acceptance Criteria (5min): Success tests
-   → WRITE: grooming/acceptance-criteria.md
-
-5. Phase 5 - Execution Planning (3min): Executor & reviewer config
-   → UPDATE: grooming/decisions.md
-
-CRITICAL REMINDERS:
-- Write files INCREMENTALLY (after each phase, not at end)
-- ONE question at a time
-- After each phase, say: "Let me document this..." then write the file
-- Use Read tool to check if files exist (resuming grooming)
-- Search codebase for existing patterns
-- Search web for best practices
-- Target minimums: 10 edge cases, 5 acceptance criteria
-
-At end:
-- Write grooming/conversation-log.md
-- Update SUMMARY.md
-- Update .state.json (phase: "grooming", status: "complete")
-- Show completion message from grooming-agent.md
-
-Begin now.
-```
+This persona includes:
+- Conversation style (one question at a time, explain "why", etc.)
+- Complete conversation flow (5 phases)
+- **Incremental file writing instructions** (write after each phase)
+- Quality standards (minimums: 10 edge cases, 5 acceptance criteria)
 
 ---
 
-## After Agent Completes
+## Opening Message
 
-When the grooming agent returns, verify files were created:
-
-**Check for:**
-- ✅ `grooming/design.md`
-- ✅ `grooming/edge-cases.md`
-- ✅ `grooming/acceptance-criteria.md`
-- ✅ `grooming/decisions.md`
-- ✅ `grooming/conversation-log.md`
-- ✅ `SUMMARY.md` updated
-- ✅ `.state.json` updated
-
-**If any missing:**
-```
-⚠️ Grooming incomplete - some files missing
-
-Expected files not found:
-- [list missing files]
-
-This may indicate the conversation was interrupted.
-
-Options:
-  /asaf-groom          - Resume grooming
-  /asaf-status         - Check current state
-```
-
-**If all present:**
-
-Show user the completion summary (agent already showed it, just confirm):
+Show the user:
 
 ```
-✅ Grooming completed successfully!
+👋 Let's groom the "[sprint-name]" feature together.
 
-All documents created. Review them in grooming/ folder.
+I've reviewed your feature description:
+"[First 1-2 sentences from initial.md]"
 
-When ready to proceed:
-  /asaf-groom-approve
+[If personal goals found]
+I also see you're working on:
+- [Goal 1 from personal-goals.md]
+- [Goal 2 from personal-goals.md]
+
+[If codebase context relevant]
+I noticed your project uses [detected stack] with [key patterns].
+
+This grooming session will take about 30-45 minutes. We'll cover:
+1. Requirements clarification (what & why)
+2. Technical design (how)
+3. Edge cases (what could go wrong)
+4. Acceptance criteria (how to verify)
+5. Execution planning (agents & review style)
+
+Ready to begin?
 ```
+
+Wait for user confirmation before proceeding.
 
 ---
 
-## Why Use Task Tool?
+## Conversation Flow
 
-**Benefits:**
-- ✅ Fresh context for grooming (not accumulated from /asaf-init)
-- ✅ True separation between command orchestration and grooming conversation
-- ✅ Agent can re-read files if it forgets (files written incrementally)
-- ✅ Clearer state boundaries
-- ✅ User sees "Grooming agent running..." (clear what's happening)
+Follow the complete flow defined in `grooming-agent.md`:
 
-**Trade-offs:**
-- Agent start/stop messages visible to user
-- Need to explicitly pass context (but this is good - forces clarity)
+### Phase 1: Understanding (5-10 min)
+- Clarify problem, users, success criteria
+- **After this phase:** Write initial `grooming/design.md`
+- Tell user: "Let me document what we've discussed..."
+
+### Phase 2: Technical Design (10-15 min)
+- Architecture, components, data models, flows
+- **After this phase:** Update `grooming/design.md`, create `grooming/decisions.md`
+- Tell user: "Let me update the design with our technical approach..."
+
+### Phase 3: Edge Cases (5-10 min)
+- Identify failure scenarios (target: 10+)
+- **After this phase:** Write `grooming/edge-cases.md`
+- Tell user: "Let me document all the edge cases we've identified..."
+
+### Phase 4: Acceptance Criteria (5 min)
+- Define testable success criteria (target: 5+)
+- **After this phase:** Write `grooming/acceptance-criteria.md`
+- Tell user: "Let me document the acceptance criteria..."
+
+### Phase 5: Execution Planning (3 min)
+- Configure executor profile and reviewer mode
+- **After this phase:** Update `grooming/decisions.md` with execution config
+- Tell user: "Let me finalize the execution configuration..."
+
+### Completion
+- Write `grooming/conversation-log.md` (full transcript)
+- Update `SUMMARY.md` with key decisions
+- Update `.state.json` (phase: "grooming", status: "complete")
+- Show completion message (from grooming-agent.md)
 
 ---
 
-## Original Conversation Flow (For Reference)
+## Key Reminders
+
+**CRITICAL:** Write files INCREMENTALLY during conversation (after each phase), not at the end.
+
+This prevents memory loss in long conversations and creates checkpoints.
+
+**For each file write:**
+1. Tell user what you're doing: "Let me document this..."
+2. Write the file
+3. Confirm: "✓ Documented in [filename]"
+
+---
+
+## Conversation Flow (For Reference)
 
 ### Phase 1: Understanding (5-10 min)
 

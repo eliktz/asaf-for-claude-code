@@ -120,40 +120,132 @@ Set `max_iterations` from task definition
 
 While `iteration < max_iterations`:
 
-#### Step 1: Adopt Executor Agent Persona
+#### Step 1: Launch Executor Sub-Agent (Task Tool)
 
 Load executor profile from `grooming/decisions.md`.
 
-**From this point, adopt the Executor Agent persona** defined in:
-`.claude/commands/shared/executor-agent.md`
+Show user:
+```
+⏳ Launching executor agent...
+```
 
-**Context to provide**:
-- Current task from `tasks.md`
-- Relevant sections from `grooming/design.md`
-- Relevant edge cases from `grooming/edge-cases.md`
-- Code standards from `grooming/decisions.md`
-- Previous reviewer feedback (if iteration > 1) from `progress.md`
-- Codebase context
+**Invoke Task tool with:**
+- **subagent_type**: general-purpose
+- **description**: Implementing Task [N]: [Task Name]
+- **prompt**: [See below]
+
+**Executor Agent Prompt:**
+
+```
+You are the ASAF Executor Agent ([executor-profile] from decisions.md).
+
+Read your complete persona from: `.claude/commands/shared/executor-agent.md`
+
+TASK TO IMPLEMENT:
+
+[Full task description from tasks.md]
+
+DESIGN CONTEXT (read these files):
+- grooming/design.md - Architecture, components, flows
+- grooming/edge-cases.md - Edge cases you MUST handle
+- grooming/decisions.md - Code standards and patterns
+
+[If iteration > 1]
+PREVIOUS REVIEWER FEEDBACK (from progress.md):
+[Include reviewer's requested changes from last iteration]
+
+YOUR JOB:
+
+1. **Understand the task**
+   - Read task requirements carefully
+   - Review relevant design sections
+   - Identify edge cases to handle
+
+2. **Implement code**
+   - Follow design.md exactly
+   - Handle ALL relevant edge cases from edge-cases.md
+   - Follow code standards from decisions.md
+   - Write clean, maintainable code
+
+3. **Write comprehensive tests**
+   - Happy path tests
+   - Edge case tests
+   - Error handling tests
+   - Aim for >80% coverage
+
+4. **Run tests**
+   - Execute test command
+   - Capture full output
+   - Document results
+
+5. **Update progress.md**
+   Write to implementation/progress.md:
+
+   ## Task [N]: [Task Name]
+   **Status**: Implementation Complete (Iteration [X])
+   **Timestamp**: [current time]
+
+   ### Executor Notes
+
+   **Implementation Summary**:
+   [What you implemented - be specific]
+
+   **Files Modified**:
+   - path/to/file (created/modified) - [purpose]
+
+   **Edge Cases Addressed**:
+   - ✅ Edge case #[N]: [how you handled it]
+
+   **Implementation Decisions**:
+   [Any choices you made with rationale]
+
+   **Test Results**:
+   ```
+   [Full test output]
+   ```
+   Tests: [X] passed, [Y] failed
+
+   **Notes for Reviewer**:
+   [Anything reviewer should know]
+
+RETURN:
+- List of files changed
+- Test results summary
+- Key implementation notes
+
+Complete this task and return results.
+```
 
 ---
 
-#### Executor Actions
+#### Wait for Executor Completion
+
+Task tool will run executor sub-agent autonomously and return results.
+
+Show progress:
+```
+⏺ Task(Implementing Task [N]) Running...
+  ⎿  Done (tool uses · tokens · time)
+```
+
+---
+
+#### Display Executor Results
 
 ```
-⏳ Executor: Implementing...
-   ├─ Reading task requirements
-   ├─ Analyzing design
-   ├─ Writing code
-   └─ Writing tests
-```
+✅ Executor completed
+   ├─ Files: [list from executor]
+   ├─ Edge cases: [count] handled
+   ├─ Tests: [X] passed, [Y] failed
+   └─ Duration: [time from Task tool]
 
-**Executor should**:
-1. Read and understand the task
-2. Implement code following design
-3. Handle edge cases from grooming
-4. Write comprehensive tests
-5. Run tests and capture results
-6. Document work in progress.md
+[If all tests passing]
+✅ All tests passing
+
+[If some failing]
+⚠️ [Y] tests failing:
+   - [test name]: [brief error]
+```
 
 **Executor updates progress.md**:
 ```markdown
@@ -191,69 +283,133 @@ Time: [duration]
 
 ---
 
-#### Display Executor Results
+#### Step 2: Launch Reviewer Sub-Agent (Task Tool)
 
+Load reviewer mode from `grooming/decisions.md`.
+
+Show user:
 ```
-✅ Code implemented
-   ├─ Files: [list modified files]
-   ├─ Edge cases: [count] handled
-   └─ Tests written: [count]
-
-⏳ Running tests...
+⏳ Launching reviewer agent...
 ```
 
-Show test output summary:
+**Invoke Task tool with:**
+- **subagent_type**: general-purpose
+- **description**: Reviewing Task [N]: [Task Name]
+- **prompt**: [See below]
+
+**Reviewer Agent Prompt:**
+
 ```
-✅ Tests: [X] passed, [Y] failed ([duration])
+You are the ASAF Reviewer Agent in [reviewer-mode] mode (from decisions.md).
 
-[If all passing]
-✅ All tests passing
+Read your complete persona from: `.claude/commands/shared/reviewer-agent.md`
 
-[If some failing]
-❌ [Y] tests failing:
-   - [test name]: [brief error]
-   - [test name]: [brief error]
+**YOUR MODE**: [Harsh Critic / Supportive Mentor / Educational / Quick Review]
+Follow the tone and approach for this mode exactly.
+
+TASK TO REVIEW:
+
+[Full task description from tasks.md]
+
+DESIGN CONTEXT (read these files):
+- grooming/design.md - What should be implemented
+- grooming/edge-cases.md - Edge cases that MUST be handled
+- grooming/acceptance-criteria.md - Success criteria
+- grooming/decisions.md - Code standards
+
+IMPLEMENTATION TO REVIEW (read from progress.md):
+
+[Include executor's implementation summary from progress.md]
+[Include executor's files modified list]
+[Include executor's edge cases addressed]
+[Include executor's test results]
+
+CODE CHANGES:
+[Read the actual files that were modified to review the code]
+
+YOUR JOB:
+
+1. **Check design compliance**
+   - Does implementation match design.md?
+   - Are architectural decisions followed?
+
+2. **Verify edge case coverage**
+   - Are ALL relevant edge cases from edge-cases.md handled?
+   - Is error handling comprehensive?
+
+3. **Assess code quality**
+   - Is code clean, readable, maintainable?
+   - Does it follow standards from decisions.md?
+   - Are there code smells or anti-patterns?
+
+4. **Review test coverage**
+   - Are tests comprehensive?
+   - Do they test happy path + edge cases + errors?
+   - Are tests actually passing?
+
+5. **Make decision: APPROVE or REQUEST CHANGES**
+
+6. **Update progress.md**
+   Add your review to implementation/progress.md:
+
+   [If APPROVED]
+   ### Reviewer Notes (Updated: [timestamp])
+
+   **Review Status**: ✅ APPROVED
+
+   **What Went Well**:
+   - [Specific positive feedback]
+
+   **Minor Suggestions** (non-blocking):
+   - [Optional improvements]
+
+   **Checklist**:
+   - ✅ Design compliance
+   - ✅ Edge case coverage
+   - ✅ Code quality
+   - ✅ Test coverage
+
+   **Verdict**: Ready to proceed to next task.
+
+   [If CHANGES REQUESTED]
+   ### Reviewer Notes (Updated: [timestamp])
+
+   **Review Status**: ⚠️ CHANGES REQUESTED (Iteration [X]/[max])
+
+   **Issues to Address**:
+
+   1. **[Category]: [Issue]** (Priority: High/Medium/Low)
+      - **Problem**: [What's wrong]
+      - **Action**: [Specific fix needed]
+      - **Reference**: [Edge case #N / design section]
+
+   [Repeat for all issues]
+
+   **What's Working**:
+   [Acknowledge good parts]
+
+   **Next Steps**:
+   [Clear guidance for executor]
+
+RETURN:
+- Decision: APPROVED or CHANGES_REQUESTED
+- Issue count (if changes requested)
+- Summary of review
+
+Complete this review and return results.
 ```
 
 ---
 
-#### Step 2: Adopt Reviewer Agent Persona
+#### Wait for Reviewer Completion
 
-**From this point, adopt the Reviewer Agent persona** defined in:
-`.claude/commands/shared/reviewer-agent.md`
+Task tool will run reviewer sub-agent autonomously and return results.
 
-Use the mode specified in `grooming/decisions.md`:
-- Supportive Mentor
-- Harsh Critic
-- Educational  
-- Quick Review
-
-**Context to provide**:
-- Current task
-- Design, edge cases, acceptance criteria from grooming
-- Executor's implementation from progress.md
-- Code changes (actual file diffs)
-- Test results
-
----
-
-#### Reviewer Actions
-
+Show progress:
 ```
-⏳ Reviewer: Analyzing implementation...
-   ├─ Checking design compliance
-   ├─ Verifying edge case coverage
-   ├─ Assessing code quality
-   └─ Reviewing test coverage
+⏺ Task(Reviewing Task [N]) Running...
+  ⎿  Done (tool uses · tokens · time)
 ```
-
-**Reviewer should**:
-1. Check against design.md
-2. Verify edge cases handled
-3. Assess code quality
-4. Review test coverage
-5. Identify issues or approve
-6. Provide specific, actionable feedback
 
 **Reviewer updates progress.md**:
 
@@ -304,13 +460,16 @@ Use the mode specified in `grooming/decisions.md`:
 
 #### Display Reviewer Results
 
+After reviewer sub-agent returns, check decision from progress.md.
+
 **If APPROVED**:
 ```
 ✅ Reviewer: APPROVED
 
-[Quote key positive feedback from reviewer]
+[Quote key positive feedback from reviewer's notes in progress.md]
 
 ✅ Task [N] complete! ([iteration count] iteration[s])
+   └─ Duration: [total time for task across all iterations]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -325,11 +484,11 @@ Use the mode specified in `grooming/decisions.md`:
 ⚠️ Reviewer: CHANGES REQUESTED (Iteration [X]/[max])
 
 Issues found:
-  [List high-priority issues concisely]
+  [List high-priority issues from reviewer's notes in progress.md]
 
 [If iteration < max]
 ⏳ Starting iteration [X+1]/[max]...
-   Executor will address reviewer feedback
+   Launching executor to address reviewer feedback
 
 [If iteration == max]
 🔴 Task blocked after [max] iterations

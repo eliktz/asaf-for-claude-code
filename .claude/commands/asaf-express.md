@@ -216,17 +216,25 @@ Estimated: [hours]
 
 ### Run Implementation
 
-**Use Quick Review mode** (faster, functional focus only):
-- Does it work?
-- Tests passing?
-- Basic quality check?
-- Approve or quick fixes
+For each task in plan.md, execute with max 2 iterations:
 
-**Simpler than full ASAF**:
-- Max 2 iterations per task (vs 3)
-- Less verbose output
-- Faster feedback loops
-- No extensive documentation
+**Iteration Loop** (max 2 iterations per task):
+
+1. **Launch Executor Sub-Agent**
+
+Use Task tool with subagent_type="general-purpose"
+- description: "Implementing Express Task [N]: [Task Name]"
+- prompt: "You are the ASAF Executor Agent with profile [executor-profile from plan.md]. Read your persona from `.claude/commands/shared/executor-agent.md`. Implement this quick task: [task description from plan.md]. Files to modify: [files list]. Edge cases: [edge cases from plan]. Implement code, write focused tests (key scenarios only), run tests, update progress.md with summary, files modified, test results. Return: files changed, test summary, notes."
+
+2. **Launch Reviewer Sub-Agent (Quick Review mode)**
+
+Use Task tool with subagent_type="general-purpose"
+- description: "Quick Review of Express Task [N]: [Task Name]"
+- prompt: "You are the ASAF Reviewer Agent in Quick Review mode. Read your persona from `.claude/commands/shared/reviewer-agent.md`. Quick functional review of: [task description]. Read implementation from progress.md: [executor's summary, files, tests]. Read modified files. Quick checks: Does it work? Tests passing? Basic quality OK? Make decision: APPROVE or REQUEST CHANGES (only for critical issues). Update progress.md with quick review notes. Return: decision, issue summary if any."
+
+3. **If APPROVED**: Move to next task
+4. **If CHANGES REQUESTED and iteration < 2**: Increment iteration, go to step 1 with feedback
+5. **If blocked after 2 iterations**: Offer upgrade to Full ASAF
 
 ---
 

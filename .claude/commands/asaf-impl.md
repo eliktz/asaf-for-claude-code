@@ -88,6 +88,8 @@ Starting Task 1/[N]...
 
 ## Implementation Loop
 
+**CRITICAL: Use Task tool to delegate to sub-agents. DO NOT implement code yourself.**
+
 For each task in `tasks.md`:
 
 ### Check if Task Already Complete
@@ -126,70 +128,14 @@ Use Task tool with subagent_type="general-purpose"
 - description: "Implementing Task [N]: [Task Name]"
 - prompt: "You are the ASAF Executor Agent with profile [executor-profile from grooming/decisions.md]. Read your complete persona from `.claude/commands/shared/executor-agent.md`. Implement this task: [full task description from tasks.md]. Design context in grooming/design.md, grooming/edge-cases.md, grooming/decisions.md. [If iteration > 1: Previous reviewer feedback from progress.md: {feedback}]. Implement code following design.md, handle edge cases, write comprehensive tests (happy path + edge cases + errors, >80% coverage), run tests, update progress.md with implementation summary, files modified, edge cases addressed, test results, and notes for reviewer. Return: files changed, test summary, implementation notes."
 
----
+Wait for executor sub-agent to complete. The Task tool will run autonomously.
 
-#### Wait for Executor Completion
+After completion, show summary:
+- Files changed
+- Edge cases handled
+- Test results
 
-Task tool will run executor sub-agent autonomously and return results.
-
-Show progress:
-```
-⏺ Task(Implementing Task [N]) Running...
-  ⎿  Done (tool uses · tokens · time)
-```
-
----
-
-#### Display Executor Results
-
-```
-✅ Executor completed
-   ├─ Files: [list from executor]
-   ├─ Edge cases: [count] handled
-   ├─ Tests: [X] passed, [Y] failed
-   └─ Duration: [time from Task tool]
-
-[If all tests passing]
-✅ All tests passing
-
-[If some failing]
-⚠️ [Y] tests failing:
-   - [test name]: [brief error]
-```
-
-**Executor updates progress.md**:
-```markdown
-## Task [N]: [Task Name]
-**Status**: Implementation Complete (Iteration [X])
-**Current Iteration**: [X]/[max]
-
-### Executor Notes (Updated: [timestamp])
-
-**Implementation Summary**:
-[What was implemented]
-
-**Files Modified**:
-- path/to/file (created/modified) - [purpose]
-
-**Edge Cases Addressed**:
-- ✅ Edge case #[N]: [how handled]
-
-**Implementation Decisions**:
-[Any choices made with rationale]
-
-**Concerns/Notes**:
-[Anything reviewer should know]
-
-### Test Results (Updated: [timestamp])
-```
-[Full test output]
-
-Tests: [X] passed, [Y] failed
-Time: [duration]
-```
-
-[Status: All passing or some failing]
-```
+Then proceed to reviewer.
 
 ---
 
@@ -199,128 +145,26 @@ Use Task tool with subagent_type="general-purpose"
 - description: "Reviewing Task [N]: [Task Name]"
 - prompt: "You are the ASAF Reviewer Agent in [reviewer-mode from grooming/decisions.md] mode. Read your complete persona from `.claude/commands/shared/reviewer-agent.md`. Review this task: [full task description from tasks.md]. Design context in grooming/design.md, grooming/edge-cases.md, grooming/acceptance-criteria.md, grooming/decisions.md. Implementation to review from progress.md: [executor's implementation summary, files modified, edge cases addressed, test results]. Read the actual modified files to review code. Check design compliance, verify edge case coverage, assess code quality, review test coverage. Make decision: APPROVE or REQUEST CHANGES. Update progress.md with review status, feedback, checklist, and verdict. Return: decision (APPROVED or CHANGES_REQUESTED), issue count if changes requested, summary of review."
 
----
+Wait for reviewer sub-agent to complete. The Task tool will run autonomously.
 
-#### Wait for Reviewer Completion
-
-Task tool will run reviewer sub-agent autonomously and return results.
-
-Show progress:
-```
-⏺ Task(Reviewing Task [N]) Running...
-  ⎿  Done (tool uses · tokens · time)
-```
-
-**Reviewer updates progress.md**:
+After completion, check decision from progress.md:
 
 **If APPROVED**:
-```markdown
-### Reviewer Notes (Updated: [timestamp])
+- Show: `✅ Reviewer: APPROVED - Task [N] complete!`
+- Mark task complete
+- Move to next task
 
-**Review Status**: ✅ APPROVED
+**If CHANGES REQUESTED and iteration < max**:
+- Show: `⚠️ Reviewer: Changes requested - Starting iteration [iteration+1]`
+- Increment iteration
+- Loop back to Step 1 with feedback
 
-**What Went Well**:
-- [Specific positive feedback]
-
-**Minor Suggestions** (non-blocking):
-- [Optional improvements]
-
-**Checklist**:
-- ✅ Design compliance
-- ✅ Edge case coverage
-- ✅ Code quality
-- ✅ Test coverage
-
-**Verdict**: Ready to proceed to next task.
-```
-
-**If CHANGES REQUESTED**:
-```markdown
-### Reviewer Notes (Updated: [timestamp])
-
-**Review Status**: ⚠️ CHANGES REQUESTED (Iteration [X]/[max])
-
-**Issues to Address**:
-
-1. **[Category]: [Issue]** (Priority: High/Medium/Low)
-   - **Problem**: [What's wrong]
-   - **Action**: [Specific fix needed]
-   - **Reference**: [Edge case #N / design section]
-
-[Repeat for all issues]
-
-**What's Working**:
-[Acknowledge good parts]
-
-**Next Steps**:
-[Clear guidance for executor]
-```
-
----
-
-#### Display Reviewer Results
-
-After reviewer sub-agent returns, check decision from progress.md.
-
-**If APPROVED**:
-```
-✅ Reviewer: APPROVED
-
-[Quote key positive feedback from reviewer's notes in progress.md]
-
-✅ Task [N] complete! ([iteration count] iteration[s])
-   └─ Duration: [total time for task across all iterations]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-```
-
-**Mark task complete, break out of iteration loop, move to next task.**
-
----
-
-**If CHANGES REQUESTED**:
-```
-⚠️ Reviewer: CHANGES REQUESTED (Iteration [X]/[max])
-
-Issues found:
-  [List high-priority issues from reviewer's notes in progress.md]
-
-[If iteration < max]
-⏳ Starting iteration [X+1]/[max]...
-   Launching executor to address reviewer feedback
-
-[If iteration == max]
-🔴 Task blocked after [max] iterations
-
-Last issue: [description]
-
-⏸️  Implementation paused automatically.
-
-Action needed:
-  /asaf-impl-review  - See full details and decide next steps
-
-Options:
-  /asaf-impl-retry [N]  - Give more attempts
-  [Fix manually]        - Fix code and /asaf-impl-resume
-  /asaf-impl-skip       - Skip this task
-```
-
-**If blocked (max iterations reached)**:
+**If CHANGES REQUESTED and iteration == max**:
+- Show: `🔴 Task blocked after [max] iterations`
 - Update .state.json: status = "blocked"
 - Update progress.md: task status = "BLOCKED"
-- **STOP execution** (don't continue to next task)
-- Wait for user intervention
-
----
-
-#### Increment Iteration
-
-If changes requested and not at max:
-```
-iteration = iteration + 1
-Continue loop (go back to Step 1: Executor addresses feedback)
-```
+- Show options: /asaf-impl-review, /asaf-impl-retry, manual fix, skip
+- STOP execution, wait for user
 
 ---
 

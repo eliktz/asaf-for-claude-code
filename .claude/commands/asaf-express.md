@@ -160,7 +160,11 @@ Your choice:
 
 ## Step 4: If Approved, Execute
 
-### Create Sprint Structure
+**CRITICAL: Use Task tool to delegate to sub-agents. DO NOT implement code yourself.**
+
+### Step 4.1: Create Sprint Structure
+
+Create these files:
 
 ```
 asaf/express/[name]/
@@ -214,55 +218,52 @@ Estimated: [hours]
 
 ---
 
-### Run Implementation
+### Step 4.2: Execute Implementation with Sub-Agents
 
-For each task in plan.md, execute with max 2 iterations:
+Show message to user:
+```
+🚀 ASAF Express: Executing...
+```
 
-**Iteration Loop** (max 2 iterations per task):
+**For each task in plan.md:**
 
-1. **Launch Executor Sub-Agent**
+Set iteration = 1, max_iterations = 2
+
+While iteration <= max_iterations:
+
+**1. Executor Sub-Agent**
 
 Use Task tool with subagent_type="general-purpose"
 - description: "Implementing Express Task [N]: [Task Name]"
 - prompt: "You are the ASAF Executor Agent with profile [executor-profile from plan.md]. Read your persona from `.claude/commands/shared/executor-agent.md`. Implement this quick task: [task description from plan.md]. Files to modify: [files list]. Edge cases: [edge cases from plan]. Implement code, write focused tests (key scenarios only), run tests, update progress.md with summary, files modified, test results. Return: files changed, test summary, notes."
 
-2. **Launch Reviewer Sub-Agent (Quick Review mode)**
+Show: `Task [N]/[total]: [Task Name] - ⏳ Executor implementing...`
+Wait for executor sub-agent to complete.
+Show: `✅ Executor completed - Files: [count], Tests: [passed]/[total]`
+
+**2. Reviewer Sub-Agent**
 
 Use Task tool with subagent_type="general-purpose"
 - description: "Quick Review of Express Task [N]: [Task Name]"
 - prompt: "You are the ASAF Reviewer Agent in Quick Review mode. Read your persona from `.claude/commands/shared/reviewer-agent.md`. Quick functional review of: [task description]. Read implementation from progress.md: [executor's summary, files, tests]. Read modified files. Quick checks: Does it work? Tests passing? Basic quality OK? Make decision: APPROVE or REQUEST CHANGES (only for critical issues). Update progress.md with quick review notes. Return: decision, issue summary if any."
 
-3. **If APPROVED**: Move to next task
-4. **If CHANGES REQUESTED and iteration < 2**: Increment iteration, go to step 1 with feedback
-5. **If blocked after 2 iterations**: Offer upgrade to Full ASAF
+Show: `⏳ Reviewer checking...`
+Wait for reviewer sub-agent to complete.
 
----
+**3. Handle Review Decision**
 
-### Display Progress
+If APPROVED:
+  Show: `✅ Reviewer: APPROVED - Task [N] complete! ([iteration] iteration[s])`
+  Break iteration loop, move to next task
 
-```
-🚀 ASAF Express: Executing...
+If CHANGES_REQUESTED and iteration < 2:
+  Show: `⚠️ Reviewer: Changes requested - Starting iteration [iteration+1]`
+  iteration++
+  Continue loop with feedback
 
-Task 1/[N]: [Task Name]
-⏳ Executor: Implementing...
-✅ Tests: [X] passed ([duration])
-⏳ Reviewer: Quick check...
-✅ Reviewer: APPROVED
-✅ Task 1 complete! (1 iteration)
-
-Task 2/[N]: [Task Name]
-⏳ Executor: Implementing...
-✅ Tests: [X] passed ([duration])
-⏳ Reviewer: Quick check...
-⚠️ Reviewer: Minor fix needed
-⏳ Executor: Addressing...
-✅ Tests: [X] passed ([duration])
-⏳ Reviewer: Quick check...
-✅ Reviewer: APPROVED
-✅ Task 2 complete! (2 iterations)
-
-[Continue...]
-```
+If CHANGES_REQUESTED and iteration == 2:
+  Show: `🔴 Task blocked after 2 iterations - Recommendation: /asaf-express-upgrade`
+  Offer upgrade to Full ASAF or manual intervention
 
 ---
 

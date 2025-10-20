@@ -143,7 +143,78 @@ Then proceed to reviewer.
 
 Use Task tool with subagent_type="general-purpose"
 - description: "Reviewing Task [N]: [Task Name]"
-- prompt: "You are the ASAF Reviewer Agent in [reviewer-mode from grooming/decisions.md] mode. Read your complete persona from `.claude/commands/shared/reviewer-agent.md`. Review this task: [full task description from tasks.md]. Design context in grooming/design.md, grooming/edge-cases.md, grooming/acceptance-criteria.md, grooming/decisions.md. Implementation to review from progress.md: [executor's implementation summary, files modified, edge cases addressed, test results]. Read the actual modified files to review code. Check design compliance, verify edge case coverage, assess code quality, review test coverage. Make decision: APPROVE or REQUEST CHANGES. Update progress.md with review status, feedback, checklist, and verdict. Return: decision (APPROVED or CHANGES_REQUESTED), issue count if changes requested, summary of review."
+- prompt: "You are the ASAF Reviewer Agent in [reviewer-mode from grooming/decisions.md] mode. Read your complete persona from `.claude/commands/shared/reviewer-agent.md`.
+
+TASK TO REVIEW: [full task description from tasks.md]
+
+READ THESE FILES:
+- grooming/design.md (what should be implemented)
+- grooming/edge-cases.md (edge cases that MUST be handled)
+- grooming/acceptance-criteria.md (success criteria)
+- grooming/decisions.md (code standards)
+- implementation/progress.md (executor's implementation, files modified, test results)
+- [All modified files to review actual code]
+
+REVIEW CHECKLIST:
+1. Design compliance - does implementation match design.md?
+2. Edge case coverage - are ALL relevant edge cases from edge-cases.md handled?
+3. Code quality - clean, readable, maintainable? Follows standards from decisions.md?
+4. Test coverage - comprehensive tests? All passing?
+5. TypeScript quality - no excessive 'any' types (max 2), proper typing?
+
+DECISION CRITERIA:
+REQUEST CHANGES if ANY of these:
+- Tests failing
+- Security vulnerabilities
+- Violates design.md architecture
+- Missing required edge cases from edge-cases.md
+- Excessive TypeScript 'any' types (>2 occurrences)
+- Poor error handling or code quality issues
+- Not following code standards from decisions.md
+
+APPROVE if ALL of these:
+- All tests passing
+- Design compliance verified
+- All edge cases handled
+- Code quality acceptable
+- Minor issues only (document as suggestions)
+
+UPDATE progress.md with this EXACT format:
+
+### Reviewer Notes
+**Decision**: [APPROVED or CHANGES REQUESTED]
+**Reviewed**: [timestamp]
+**Reviewer**: ASAF ([mode] Mode)
+
+[IF APPROVED:]
+**What Went Well**:
+- [Specific positive points - at least 2]
+
+**Code Quality**:
+- Design compliance: ✅ or ⚠️
+- Edge cases: ✅ or ⚠️
+- TypeScript quality: ✅ or ⚠️
+- Tests: ✅ or ⚠️
+
+**Minor Suggestions** (non-blocking):
+- [Improvements for future - if any]
+
+**Verdict**: Task complete, ready for next task.
+
+[IF CHANGES REQUESTED:]
+**Blocking Issues**:
+1. **[Category]**: [Specific issue]
+   - Problem: [What's wrong]
+   - Fix: [Specific action needed]
+   - Reference: [Edge case #N or design section]
+
+**What's Working**:
+- [Acknowledge good parts]
+
+**Next Steps**:
+- [Clear guidance for executor]
+
+RETURN to main context: Your decision (APPROVED or CHANGES_REQUESTED) and brief summary."
 
 Wait for reviewer sub-agent to complete. The Task tool will run autonomously.
 

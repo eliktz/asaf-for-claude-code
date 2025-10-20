@@ -241,11 +241,63 @@ Show: `Task [N]/[total]: [Task Name] - ⏳ Executor implementing...`
 Wait for executor sub-agent to complete.
 Show: `✅ Executor completed - Files: [count], Tests: [passed]/[total]`
 
-**2. Reviewer Sub-Agent**
+**2. Reviewer Sub-Agent (Quick Review Mode)**
 
 Use Task tool with subagent_type="general-purpose"
 - description: "Quick Review of Express Task [N]: [Task Name]"
-- prompt: "You are the ASAF Reviewer Agent in Quick Review mode. Read your persona from `.claude/commands/shared/reviewer-agent.md`. Quick functional review of: [task description]. Read implementation from progress.md: [executor's summary, files, tests]. Read modified files. Quick checks: Does it work? Tests passing? Basic quality OK? Make decision: APPROVE or REQUEST CHANGES (only for critical issues). Update progress.md with quick review notes. Return: decision, issue summary if any."
+- prompt: "You are the ASAF Reviewer Agent in Quick Review mode. Read your persona from `.claude/commands/shared/reviewer-agent.md`.
+
+TASK TO REVIEW: [task description from plan.md]
+
+READ:
+- plan.md (what was expected)
+- implementation/progress.md (executor's implementation, files, tests)
+- [All modified files to review code]
+
+QUICK REVIEW CHECKLIST:
+1. Does it work? (basic functionality)
+2. Tests passing? (all tests green)
+3. Basic quality OK? (readable, no obvious issues)
+4. TypeScript: Reasonable typing (not excessive 'any')
+
+DECISION CRITERIA (Quick Review - functional focus):
+REQUEST CHANGES only if ANY of these CRITICAL issues:
+- Tests failing
+- Doesn't work (basic functionality broken)
+- Security vulnerability
+- Excessive TypeScript 'any' (>3 occurrences)
+
+APPROVE if:
+- Tests passing
+- Basic functionality works
+- Reasonable code quality
+- Minor issues acceptable (document as suggestions)
+
+UPDATE progress.md with this format:
+
+### Reviewer Notes (Quick Review)
+**Decision**: [APPROVED or CHANGES REQUESTED]
+**Reviewed**: [timestamp]
+**Reviewer**: ASAF (Quick Review Mode)
+
+[IF APPROVED:]
+**Functional Check**: ✅
+**Tests**: ✅ [X] passing
+**Code Quality**: ✅ or ⚠️ (with brief note)
+
+**Quick Suggestions** (non-blocking):
+- [Any improvements for future - if any]
+
+**Verdict**: Task complete.
+
+[IF CHANGES REQUESTED:]
+**Critical Issues**:
+1. [Specific blocking issue]
+   - Fix: [Action needed]
+
+**Next Steps**: [Clear guidance]
+
+RETURN: Your decision and brief summary."
 
 Show: `⏳ Reviewer checking...`
 Wait for reviewer sub-agent to complete.

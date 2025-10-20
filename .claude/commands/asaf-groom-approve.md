@@ -150,16 +150,18 @@ Update `.state.json`:
 
 ---
 
-## Trigger Task Planner Agent
+## Generate Task Breakdown
+
+**Note**: Task planning is deterministic - you do this directly, NOT via Task tool.
 
 Display:
 ```
 ✅ Grooming approved and locked
 
-Triggering Task Planner Agent...
+Generating task breakdown...
 ```
 
-### Task Planner Agent Behavior
+### Task Planning Process
 
 **Read**:
 - grooming/design.md (components, flows)
@@ -367,6 +369,8 @@ This will execute all tasks automatically with:
 
 You can monitor with `/asaf-status` or pause with `/asaf-impl-pause`
 ```
+
+**STOP HERE. Wait for user to run `/asaf-impl` when ready.**
 
 ---
 

@@ -19,9 +19,11 @@ if [ ! -d ".claude/commands" ]; then
     exit 1
 fi
 
-# Create global commands directory if it doesn't exist
+# Create global commands and agents directories if they don't exist
 echo "📁 Creating ~/.claude/commands/ directory..."
 mkdir -p ~/.claude/commands/shared
+echo "📁 Creating ~/.claude/agents/ directory..."
+mkdir -p ~/.claude/agents
 
 # Check if commands already exist
 if [ -f ~/.claude/commands/asaf-init.md ]; then
@@ -44,17 +46,24 @@ echo "📋 Installing shared agent personas..."
 cp .claude/commands/shared/*.md ~/.claude/commands/shared/
 echo "   ✓ Shared files installed"
 
+echo "🤖 Installing ASAF default sub-agents..."
+cp agents/*.md ~/.claude/agents/
+echo "   ✓ Sub-agents installed"
+
 # Count installed files
 COMMAND_COUNT=$(ls ~/.claude/commands/asaf-*.md 2>/dev/null | wc -l)
 SHARED_COUNT=$(ls ~/.claude/commands/shared/*.md 2>/dev/null | wc -l)
+AGENT_COUNT=$(ls ~/.claude/agents/asaf-*.md 2>/dev/null | wc -l)
 
 echo ""
 echo "✅ ASAF installed successfully!"
 echo ""
 echo "📊 Installation Summary:"
-echo "   Commands: $COMMAND_COUNT files"
-echo "   Shared:   $SHARED_COUNT files"
-echo "   Location: ~/.claude/commands/"
+echo "   Commands:    $COMMAND_COUNT files"
+echo "   Shared:      $SHARED_COUNT files"
+echo "   Sub-Agents:  $AGENT_COUNT files"
+echo "   Location:    ~/.claude/commands/"
+echo "   Agents:      ~/.claude/agents/"
 echo ""
 echo "🎯 Next Steps:"
 echo ""

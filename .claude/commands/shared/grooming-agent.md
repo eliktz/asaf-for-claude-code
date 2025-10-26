@@ -274,28 +274,67 @@ Tell the developer:
 
 ---
 
-### Phase 5: Execution Planning (3 min)
+### Phase 5: Execution Planning (5-7 min)
 
-**Goal**: Configure how implementation will run
+**Goal**: Configure how implementation will run, including selecting sub-agents
 
 **Decisions to make**:
 
-1. **Executor Profile**:
-   - Detect from codebase (package.json, requirements.txt, etc.)
-   - Options: typescript-fullstack, python-backend, rust-systems, etc.
-   - "I see you're using [stack]. I'll use the [profile] executor."
+1. **Discover Available Sub-Agents**:
 
-2. **Reviewer Mode**:
+   **Use Bash tool** to list available agents in both user-level and project-level directories:
+   ```
+   ls ~/.claude/agents/ .claude/agents/ 2>/dev/null | grep -E '\.md$' | sort -u
+   ```
+
+   Present results to user:
+   > "I found these sub-agents available in your environment:
+   >
+   > **ASAF Default Agents**:
+   > - asaf-typescript-executor
+   > - asaf-python-executor
+   > - asaf-java-executor
+   > - asaf-code-reviewer
+   >
+   > **Custom Agents** (if found):
+   > - [list any custom agents found]
+   >
+   > Based on your codebase [detected tech stack], would you like to:
+   > 1. Use asaf-[detected]-executor for implementation?
+   > 2. Use one of your custom agents?
+   > 3. Create a new custom agent for this project?
+   > 4. Point to an agent in a different location?"
+
+2. **Select Executor Sub-Agent**:
+   - Detect tech stack from codebase (package.json, requirements.txt, pom.xml, etc.)
+   - Suggest matching ASAF agent or custom agent
+   - Allow user to override
+
+   **Mapping**:
+   - TypeScript/Node.js → `asaf-typescript-executor` (or custom)
+   - Python/FastAPI → `asaf-python-executor` (or custom)
+   - Java/Spring → `asaf-java-executor` (or custom)
+   - Other → Ask user which agent to use
+
+   Prompt: "For your [tech-stack] project, I recommend [agent-name]. Does this work for you, or would you prefer a different agent?"
+
+3. **Select Reviewer Sub-Agent**:
+   - Default: `asaf-code-reviewer`
+   - Or custom reviewer if user has one
+
+   Prompt: "For code review, I recommend asaf-code-reviewer (enforces ASAF quality gates). Or do you have a custom reviewer agent you'd like to use?"
+
+4. **Reviewer Mode**:
    - Based on personal goals and experience level
    - Options: Harsh Critic, Supportive Mentor, Educational, Quick Review
    - "You're senior in backend but learning security patterns. I'd suggest Educational mode - explains the 'why'. Thoughts?"
 
-3. **Max Iterations**:
+5. **Max Iterations**:
    - Default: 3 per task
    - Adjust for complexity
    - "Standard is 3 iterations. Security-critical tasks might need more."
 
-4. **Task Execution Pattern**:
+6. **Task Execution Pattern**:
    - Default: executor → test → reviewer → executor
    - Special cases?
 
@@ -305,8 +344,11 @@ Add execution configuration section:
 ```markdown
 ## Execution Configuration
 
-**Executor Profile**: [profile-name]
-**Rationale**: [Why this profile - detected from codebase]
+**Executor Sub-Agent**: [exact-agent-name]
+**Rationale**: [Why this agent - detected tech stack or user choice]
+
+**Reviewer Sub-Agent**: [exact-agent-name]
+**Rationale**: [Default ASAF reviewer or custom]
 
 **Reviewer Mode**: [Mode name]
 **Rationale**: [Based on personal goals/experience level]
@@ -314,14 +356,23 @@ Add execution configuration section:
 **Max Iterations Per Task**: [Number]
 **Rationale**: [Standard or adjusted for complexity]
 
+**Task Execution Pattern**: executor → test → reviewer → executor
+**Notes**: [Any special considerations]
+
 ## Out of Scope
 [Features explicitly deferred to future sprints]
 ```
 
 Tell the developer:
-> "Let me finalize the execution configuration..."
+> "Let me finalize the execution configuration with your selected sub-agents..."
 > [Update decisions.md]
 > "✓ Added execution config to grooming/decisions.md."
+>
+> **Sub-Agents Selected:**
+> - Executor: [agent-name]
+> - Reviewer: [agent-name]
+>
+> These agents will be invoked during implementation.
 
 ---
 

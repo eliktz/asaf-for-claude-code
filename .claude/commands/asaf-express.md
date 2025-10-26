@@ -137,8 +137,8 @@ Next: /asaf-groom
 
 **Configuration**:
   - Stack: [Detected stack]
-  - Executor: [profile-name]
-  - Reviewer: Quick Review (functional focus)
+  - Executor Sub-Agent: [exact-agent-name - e.g., asaf-typescript-executor]
+  - Reviewer Sub-Agent: asaf-code-reviewer (Quick Review mode)
   - Max iterations: 2 per task
 
 **Estimated Time**: ~[X] hours
@@ -198,8 +198,10 @@ Created: [timestamp]
 [Task breakdown from analysis]
 
 ## Configuration
-- Executor: [profile]
-- Reviewer: Quick Review
+- Executor Sub-Agent: [exact-agent-name based on detected stack]
+  (Auto-detected: TypeScript → asaf-typescript-executor, Python → asaf-python-executor, Java → asaf-java-executor)
+- Reviewer Sub-Agent: asaf-code-reviewer
+- Reviewer Mode: Quick Review
 - Max iterations: 2
 
 Estimated: [hours]
@@ -233,9 +235,9 @@ While iteration <= max_iterations:
 
 **1. Executor Sub-Agent**
 
-Use Task tool with subagent_type="general-purpose"
+Use Task tool with subagent_type="[executor-agent-name from plan.md Configuration section - e.g., asaf-typescript-executor]"
 - description: "Implementing Express Task [N]: [Task Name]"
-- prompt: "You are the ASAF Executor Agent with profile [executor-profile from plan.md]. Read your persona from `.claude/commands/shared/executor-agent.md`. Implement this quick task: [task description from plan.md]. Files to modify: [files list]. Edge cases: [edge cases from plan]. Implement code, write focused tests (key scenarios only), run tests, update progress.md with summary, files modified, test results. Return: files changed, test summary, notes."
+- prompt: "You are the [executor-agent-name] implementing this ASAF Express task. Read your complete persona and workflow from your agent file (which references `.claude/commands/shared/executor-agent.md` for core behavior). Implement this quick task: [task description from plan.md]. Files to modify: [files list]. Edge cases: [edge cases from plan]. Implement code, write focused tests (key scenarios only), run tests, update progress.md with summary, files modified, test results. Return: files changed, test summary, notes."
 
 Show: `Task [N]/[total]: [Task Name] - ⏳ Executor implementing...`
 Wait for executor sub-agent to complete.
@@ -243,9 +245,9 @@ Show: `✅ Executor completed - Files: [count], Tests: [passed]/[total]`
 
 **2. Reviewer Sub-Agent (Quick Review Mode)**
 
-Use Task tool with subagent_type="general-purpose"
+Use Task tool with subagent_type="[reviewer-agent-name from plan.md Configuration section - typically asaf-code-reviewer]"
 - description: "Quick Review of Express Task [N]: [Task Name]"
-- prompt: "You are the ASAF Reviewer Agent in Quick Review mode. Read your persona from `.claude/commands/shared/reviewer-agent.md`.
+- prompt: "You are the [reviewer-agent-name] in Quick Review mode. Read your complete persona and review methodology from your agent file (which references `.claude/commands/shared/reviewer-agent.md` for core behavior).
 
 TASK TO REVIEW: [task description from plan.md]
 

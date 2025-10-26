@@ -44,7 +44,11 @@ Read:
 1. **Tasks**: `implementation/tasks.md` (what to implement)
 2. **Progress**: `implementation/progress.md` (current state)
 3. **Grooming docs**: All files from `grooming/` (design reference)
-4. **Decisions**: Executor profile, reviewer mode, max iterations
+4. **Decisions**: `grooming/decisions.md` - Extract:
+   - **Executor Sub-Agent**: Exact agent name to invoke
+   - **Reviewer Sub-Agent**: Exact agent name to invoke
+   - **Reviewer Mode**: Mode to use during review
+   - **Max Iterations**: Per-task limit
 
 ---
 
@@ -124,9 +128,9 @@ While `iteration < max_iterations`:
 
 #### Step 1: Launch Executor Sub-Agent
 
-Use Task tool with subagent_type="general-purpose"
+Use Task tool with subagent_type="[executor-agent-name from grooming/decisions.md - e.g., asaf-typescript-executor, asaf-python-executor, or custom agent]"
 - description: "Implementing Task [N]: [Task Name]"
-- prompt: "You are the ASAF Executor Agent with profile [executor-profile from grooming/decisions.md]. Read your complete persona from `.claude/commands/shared/executor-agent.md`. Implement this task: [full task description from tasks.md]. Design context in grooming/design.md, grooming/edge-cases.md, grooming/decisions.md. [If iteration > 1: Previous reviewer feedback from progress.md: {feedback}]. Implement code following design.md, handle edge cases, write comprehensive tests (happy path + edge cases + errors, >80% coverage), run tests, update progress.md with implementation summary, files modified, edge cases addressed, test results, and notes for reviewer. Return: files changed, test summary, implementation notes."
+- prompt: "You are the [executor-agent-name] implementing this ASAF task. Read your complete persona and workflow from your agent file (which references `.claude/commands/shared/executor-agent.md` for core behavior). Implement this task: [full task description from tasks.md]. Design context in grooming/design.md, grooming/edge-cases.md, grooming/decisions.md. [If iteration > 1: Previous reviewer feedback from progress.md: {feedback}]. Implement code following design.md, handle edge cases, write comprehensive tests (happy path + edge cases + errors, >80% coverage), run tests, update progress.md with implementation summary, files modified, edge cases addressed, test results, and notes for reviewer. Return: files changed, test summary, implementation notes."
 
 Wait for executor sub-agent to complete. The Task tool will run autonomously.
 
@@ -141,9 +145,9 @@ Then proceed to reviewer.
 
 #### Step 2: Launch Reviewer Sub-Agent
 
-Use Task tool with subagent_type="general-purpose"
+Use Task tool with subagent_type="[reviewer-agent-name from grooming/decisions.md - e.g., asaf-code-reviewer or custom agent]"
 - description: "Reviewing Task [N]: [Task Name]"
-- prompt: "You are the ASAF Reviewer Agent in [reviewer-mode from grooming/decisions.md] mode. Read your complete persona from `.claude/commands/shared/reviewer-agent.md`.
+- prompt: "You are the [reviewer-agent-name] in [reviewer-mode from grooming/decisions.md] mode. Read your complete persona and review methodology from your agent file (which references `.claude/commands/shared/reviewer-agent.md` for core behavior).
 
 TASK TO REVIEW: [full task description from tasks.md]
 

@@ -60,6 +60,119 @@ project-root/
 }
 ```
 
+### Sprint Selection
+
+**Current Sprint State File**: `/asaf/.current-sprint.json`
+
+```json
+{
+  "sprint": "sprint-name",
+  "selected_at": "2025-10-31T12:00:00Z",
+  "type": "full"
+}
+```
+
+This file tracks which sprint is currently active. All sprint-context commands check this file before operating.
+
+### Auto-Selection Algorithm
+
+**When to use**: Commands that require sprint context should run this algorithm if `/asaf/.current-sprint.json` is missing or points to a deleted sprint.
+
+**Algorithm**:
+
+**Step 1: Scan for valid sprints**
+```
+1. List all subdirectories in /asaf/
+2. Exclude /asaf/express/ (express sprints not tracked in selection)
+3. Filter to valid full sprints: must have .state.json file
+```
+
+**Step 2: Handle edge cases**
+
+If **0 valid sprints** found:
+```
+🔴 ERROR: No valid sprints found
+
+No full sprints exist in this repository.
+
+To create a sprint:
+  /asaf-init <sprint-name>
+
+To see existing folders:
+  ls -la asaf/
+```
+**STOP execution** - Cannot proceed without a valid sprint.
+
+If **1 valid sprint** found:
+- Select that sprint automatically
+- Proceed to Step 3
+
+If **multiple valid sprints** found:
+- Sort by `.state.json` modification time (newest first)
+- **Tiebreaker**: If multiple sprints have identical modification times, use alphabetical order
+- Select the most recently modified sprint
+- Proceed to Step 3
+
+**Step 3: Create selection file**
+```
+Read selected sprint's .state.json to get type field.
+
+Create /asaf/.current-sprint.json:
+{
+  "sprint": "<selected-sprint-name>",
+  "selected_at": "<current-ISO-8601-timestamp>",
+  "type": "full"
+}
+```
+
+**Step 4: Log and continue**
+```
+🔵 INFO: Auto-selected sprint '<sprint-name>' (most recently modified)
+```
+
+Continue with command execution using selected sprint.
+
+**Rationale for .state.json modification time**:
+- Reflects actual sprint work (only ASAF commands update this file)
+- Ignores noise from file viewing or IDE activity
+- Already required for validation (every valid sprint has it)
+
+### Sprint Selection Validation Pattern
+
+**Commands that require sprint context** should include this at the beginning:
+
+```markdown
+## Step 0: Verify Active Sprint
+
+1. Check if /asaf/.current-sprint.json exists
+   - If NO: Run auto-selection algorithm (see above)
+   - If YES: Read sprint name from file
+
+2. Validate selected sprint exists at /asaf/<sprint-name>/
+   - If NO: Sprint was deleted
+     - Delete stale /asaf/.current-sprint.json
+     - Log: "Selected sprint no longer exists, auto-selecting..."
+     - Run auto-selection algorithm
+   - If YES: Continue
+
+3. Validate sprint has .state.json
+   - Check /asaf/<sprint-name>/.state.json exists
+   - If NO but sprint folder exists:
+     - LENIENT WARNING: Log "Sprint has no .state.json (may be incomplete)"
+     - Continue anyway (developer may be fixing)
+   - If sprint folder missing: Already handled in step 2
+
+4. Set context: All subsequent operations use /asaf/<sprint-name>/
+```
+
+**Commands that do NOT require sprint context**:
+- `/asaf-list` (lists all sprints independently)
+- `/asaf-help` (shows help)
+- `/asaf-select` (sets sprint selection)
+
+**Special case**:
+- `/asaf-init` (creates new sprint, prompts to set as current)
+
 ## Workflow Phases
 
 ### 1. Initialization

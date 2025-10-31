@@ -201,6 +201,7 @@ cd asaf
 - `/asaf-groom` - Collaborative design (30-45 min)
 - `/asaf-groom-approve` - Lock grooming, create tasks
 - `/asaf-status` - Show current status
+- `/asaf-select [sprint-name]` - Select active sprint (interactive if no name)
 
 ### Coming in Phase 2-6
 - `/asaf-impl` - Run implementation (needs completion)
@@ -354,6 +355,87 @@ Reviewer Agent = Claude + reviewer-agent.md + review context
 
 ---
 
+## Sprint Selection
+
+When working with multiple sprints in a project, ASAF automatically tracks which sprint is currently active using `/asaf/.current-sprint.json`.
+
+### How It Works
+
+**Auto-Selection**:
+- First time running a command: ASAF automatically selects the most recently modified sprint
+- Selection persists across sessions
+- All sprint-context commands operate on the selected sprint
+
+**Manual Selection**:
+```bash
+# Interactive mode - shows list with current highlighted
+/asaf-select
+
+# Direct selection
+/asaf-select sprint-name
+
+# Check current sprint
+/asaf-status
+```
+
+### Current Sprint Display
+
+Every `/asaf-status` shows the active sprint prominently:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 CURRENT SPRINT: add-authentication
+   Type: Full Sprint
+   Selected: 2 hours ago (auto-selected)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### Multi-Sprint Workflow
+
+```bash
+# Start first sprint
+/asaf-init feature-auth
+# ... work on it ...
+
+# Start second sprint (queued, not active yet)
+/asaf-init feature-payments
+# Choose "n" when asked to set as current
+
+# Continue working on auth
+/asaf-groom  # Operates on auth (still active)
+
+# Switch to payments
+/asaf-select feature-payments
+/asaf-groom  # Now operates on payments
+
+# Switch back
+/asaf-select feature-auth
+/asaf-impl   # Resumes auth implementation
+```
+
+### State File Format
+
+`/asaf/.current-sprint.json`:
+```json
+{
+  "sprint": "add-authentication",
+  "selected_at": "2025-10-31T12:00:00Z",
+  "type": "full"
+}
+```
+
+**Git Behavior**: You can choose to:
+- **Commit it**: Share active sprint across team/machines
+- **Ignore it**: Add to `.gitignore` for local-only selection
+
+Add to `.gitignore` (recommended for solo work):
+```gitignore
+# ASAF sprint selection (local preference)
+/asaf/.current-sprint.json
+```
+
+---
+
 ## Current Implementation Status
 
 ### ✅ Complete - Version 1.0.0 (Production Ready!)
@@ -377,8 +459,9 @@ Reviewer Agent = Claude + reviewer-agent.md + review context
 - [x] `asaf-retro.md` - Retrospective conversation
 - [x] `asaf-status.md` - Show sprint status
 
-**Express & Utilities (4 files)**:
+**Express & Utilities (5 files)**:
 - [x] `asaf-express.md` - Quick task workflow
+- [x] `asaf-select.md` - Sprint selection (interactive or direct)
 - [x] `asaf-list.md` - List all sprints
 - [x] `asaf-help.md` - Complete help system
 - [x] `asaf-summary.md` - View sprint summary (uses SUMMARY.md)
@@ -388,7 +471,7 @@ Reviewer Agent = Claude + reviewer-agent.md + review context
 - [x] `install.sh` - Global installation script
 - [x] `uninstall.sh` - Uninstall script
 
-**Total**: 22 files ready for production use!
+**Total**: 23 files ready for production use!
 
 ### 🎯 Optional Enhancements (Future)
 - [ ] `/asaf-resume <sprint>` - Resume old sprint (referenced but not critical)

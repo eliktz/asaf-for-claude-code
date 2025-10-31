@@ -61,6 +61,7 @@ asaf/
 │       ├── asaf-demo.md
 │       ├── asaf-retro.md
 │       ├── asaf-status.md
+│       ├── asaf-select.md
 │       ├── asaf-list.md
 │       ├── asaf-help.md
 │       ├── asaf-summary.md
@@ -84,6 +85,7 @@ When users run ASAF commands in their projects, this structure is created:
 ```
 user-project/
 ├── asaf/                    # Created by /asaf-init
+│   ├── .current-sprint.json # Sprint selection state (auto-created)
 │   ├── <sprint-name>/       # Full ASAF sprint
 │   │   ├── SUMMARY.md       # Single source of truth (human-readable)
 │   │   ├── .state.json      # Machine-readable state
@@ -124,6 +126,67 @@ user-project/
 ```
 
 **Critical**: All commands MUST validate state before execution. Check phase and prerequisites.
+
+---
+
+## Sprint Selection State
+
+### .current-sprint.json Format
+
+Located at `/asaf/.current-sprint.json`, this file tracks which sprint is currently active:
+
+```json
+{
+  "sprint": "sprint-name",
+  "selected_at": "2025-10-31T12:00:00Z",
+  "type": "full"
+}
+```
+
+### Auto-Selection Algorithm
+
+When `.current-sprint.json` is missing, commands automatically:
+1. Scan `/asaf/` for valid full sprints (have `.state.json`)
+2. Sort by `.state.json` modification time (most recent first)
+3. Use alphabetical order as tiebreaker
+4. Create `.current-sprint.json` with selected sprint
+5. Log: "Auto-selected sprint '<name>' (most recently modified)"
+6. Continue execution
+
+### Sprint Selection Validation Pattern (Step 0)
+
+All sprint-context commands include this as Step 0:
+
+```markdown
+## Step 0: Verify Active Sprint
+
+1. Check if /asaf/.current-sprint.json exists
+   - If NO: Run auto-selection algorithm (see asaf-core.md)
+   - If YES: Read sprint name from file
+
+2. Validate selected sprint exists at /asaf/<sprint-name>/
+   - If NO: Delete stale file, run auto-selection
+   - If YES: Continue
+
+3. Validate sprint has .state.json
+   - LENIENT: Warn but continue if missing
+
+4. Set context: All operations use /asaf/<sprint-name>/
+```
+
+### Commands Requiring Sprint Context
+
+All commands EXCEPT:
+- `/asaf-list` (lists all sprints)
+- `/asaf-help` (shows help)
+- `/asaf-select` (sets selection)
+- `/asaf-init` (creates new sprint, prompts to set as current)
+
+### Git Behavior
+
+`.current-sprint.json` can be:
+- **Committed**: Share active sprint across team/machines
+- **Ignored**: Add to `.gitignore` for local-only selection (recommended for solo work)
 
 ---
 
@@ -168,11 +231,12 @@ For each task:
 
 ### Core Workflow
 - `/asaf-init <name>` - Initialize sprint, create folder structure
+- `/asaf-select [name]` - Select active sprint (interactive if no name)
 - `/asaf-groom` - 30-45 min design conversation with Grooming Agent
 - `/asaf-groom-approve` - Lock grooming, generate tasks.md
 - `/asaf-impl` - Autonomous implementation (3-6 hours)
 - `/asaf-impl-pause` / `/asaf-impl-resume` - Control execution
-- `/asaf-status` - Current sprint state
+- `/asaf-status` - Current sprint state (shows selected sprint prominently)
 - `/asaf-demo` - Generate demo presentation
 - `/asaf-retro` - Learning retrospective
 
@@ -504,3 +568,4 @@ ASAF 1.0.0 (Production Ready)
 - 4 agent personas defined
 - Express mode available
 - Pause/resume/review/retry capabilities
+- from now on, push changes to both repositories

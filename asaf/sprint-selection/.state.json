@@ -1,0 +1,20 @@
+{
+  "sprint": "sprint-selection",
+  "type": "full",
+  "phase": "implementation",
+  "status": "complete",
+  "created": "2025-10-31T11:05:00Z",
+  "updated": "2025-10-31T12:50:00Z",
+  "grooming_completed_at": "2025-10-31T11:40:00Z",
+  "grooming_approved": true,
+  "grooming_locked": true,
+  "grooming_approved_at": "2025-10-31T11:45:00Z",
+  "planning_complete": true,
+  "planning_completed_at": "2025-10-31T11:50:00Z",
+  "implementation_started_at": "2025-10-31T12:00:00Z",
+  "implementation_completed_at": "2025-10-31T12:50:00Z",
+  "total_tasks": 9,
+  "current_task": 9,
+  "completed_tasks": [1, 2, 3, 4, 5, 6, 7, 8],
+  "implementation_complete": true
+}

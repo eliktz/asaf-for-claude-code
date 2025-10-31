@@ -256,7 +256,38 @@ Would you like to create one now? (y/n)
 
 ---
 
-### Step 6: Success Message
+### Step 6: Sprint Selection Prompt
+
+After sprint is created, prompt user to set it as current:
+
+```
+New sprint '<sprint-name>' created. Set as current sprint? [Y/n]:
+```
+
+**Wait for user input.**
+
+**If user enters 'Y' or presses Enter** (default YES):
+- Create `/asaf/.current-sprint.json`:
+```json
+{
+  "sprint": "<sprint-name>",
+  "selected_at": "<current-ISO-8601-timestamp>",
+  "type": "full"
+}
+```
+- Show: "✓ Sprint '<sprint-name>' set as current"
+- Continue to Step 7
+
+**If user enters 'n' or 'N'**:
+- Do NOT create/update `.current-sprint.json`
+- Show: "Sprint created but not set as current. Run `/asaf-select <sprint-name>` to select it later."
+- Continue to Step 7
+
+**Rationale**: This allows developers to create sprints without disrupting their current work context. They may be queueing up a new sprint while still working on another.
+
+---
+
+### Step 7: Success Message
 
 ```
 ✅ Sprint initialized: <sprint-name>
@@ -266,6 +297,9 @@ Created:
   ├── initial.md          # Feature description
   ├── SUMMARY.md          # Sprint overview
   └── .state.json         # Sprint state
+
+[If user selected Y in Step 6]
+Current sprint: <sprint-name>
 
 Status: 🔄 Ready for Grooming
 

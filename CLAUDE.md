@@ -289,6 +289,155 @@ Used to:
 
 ---
 
+## Story Points System
+
+### Why Story Points Instead of Time Estimates
+
+ASAF uses **story points** for task complexity estimation instead of time-based estimates. This approach is more appropriate because:
+
+1. **Time-agnostic** - Claude works at a different pace than humans; time estimates are meaningless
+2. **Universal complexity measure** - Story points represent intrinsic complexity regardless of who executes
+3. **Industry standard** - Developers are already familiar with agile story points
+4. **Better for planning** - Forces clear distinction between simple vs complex tasks
+5. **Retrospective insights** - Enables velocity tracking and estimation accuracy analysis
+
+### Story Point Scale (1/2/4/8)
+
+ASAF uses a simplified Fibonacci-like scale:
+
+| Points | Complexity | Description | Max Iterations | Examples |
+|--------|------------|-------------|----------------|----------|
+| **1** | Trivial | Simple config change, single file edit, well-defined | 2 | Update constant, add field to schema, simple UI text change |
+| **2** | Simple | Straightforward implementation, clear requirements, minimal unknowns | 3 | Add validation rule, create simple endpoint, basic component |
+| **4** | Complex | Multiple components, design decisions, integration points, many edge cases | 4 | Authentication system, multi-step workflow, complex business logic |
+| **8** | Very Complex | Architecture changes, high uncertainty, cross-cutting concerns | 5 | Major refactoring, new architecture layer, third-party integration |
+
+**Note**: If a task is estimated at 8 points, consider breaking it down into smaller 2-4 point tasks.
+
+### Task Planning with Story Points
+
+During `/asaf-groom-approve`, the Task Planner Agent:
+
+1. **Analyzes requirements** from grooming documents
+2. **Breaks down feature** into 3-8 executable tasks
+3. **Assigns story points** to each task with rationale
+4. **Maps complexity to max iterations**:
+   - 1 point → 2 max iterations
+   - 2 points → 3 max iterations
+   - 4 points → 4 max iterations
+   - 8 points → 5 max iterations (or suggest breakdown)
+
+### tasks.md Format with Story Points
+
+```markdown
+## Task 1: Implement User Authentication
+
+**Complexity**: 4 story points
+
+**Complexity Rationale**:
+Multiple components required (middleware, session storage, password hashing),
+security considerations, integration with existing user model, multiple edge
+cases for invalid credentials and session management.
+
+**Max Iterations**: 4 (based on 4-point complexity)
+
+**Description**:
+[Task description...]
+
+**Definition of Done**:
+- [ ] Middleware authenticates requests
+- [ ] Sessions stored securely
+- [ ] Edge cases #1-5 handled
+- [ ] All tests passing
+```
+
+### Sprint Velocity Tracking
+
+During `/asaf-retro`, velocity metrics are calculated:
+
+**Velocity Formula**:
+```
+Velocity = (Completed Story Points / Planned Story Points) × 100%
+```
+
+**Example**:
+- Planned: 18 points (8 tasks)
+- Completed: 16 points (7 tasks, 1 blocked)
+- **Velocity: 88.9%** ← Good velocity
+
+### Velocity Interpretation
+
+| Velocity | Interpretation | Typical Actions |
+|----------|---------------|-----------------|
+| **< 70%** | Low - significant blockers or underestimation | Review grooming quality, break down complex tasks, check for unclear requirements |
+| **70-90%** | Good - normal range with minor issues | Minor adjustments, continue current approach |
+| **> 90%** | Excellent - accurate estimation or overestimation | Consider taking on slightly more complexity, verify estimates weren't inflated |
+
+### Retrospective Metrics
+
+The `/asaf-retro` command generates comprehensive velocity analysis:
+
+**Included in retro/learnings.md**:
+- Total story points (planned vs completed)
+- Velocity percentage
+- Complexity breakdown by point value
+- Iteration efficiency (avg iterations per task)
+- Tasks completed in 1 iteration (ideal execution)
+- Tasks needing 3+ iterations (complexity indicators)
+- Velocity trend (if multiple sprints tracked)
+- Estimating accuracy lessons
+
+**Example Velocity Analysis**:
+```markdown
+## Sprint Velocity Metrics
+
+**Story Points**:
+- Planned: 20 points
+- Completed: 18 points
+- **Velocity**: 90%
+
+**Complexity Breakdown**:
+| Complexity | Planned | Completed | Completion Rate |
+|------------|---------|-----------|-----------------|
+| 1 point    | 2       | 2         | 100%            |
+| 2 points   | 4       | 4         | 100%            |
+| 4 points   | 3       | 2         | 67%             |
+| 8 points   | 1       | 1         | 100%            |
+
+**Iteration Efficiency**:
+- Average iterations per task: 2.1
+- Tasks completed in 1 iteration: 5 (50%)
+- Tasks needing 3+ iterations: 2 (20%)
+
+**Velocity Analysis**:
+- **Excellent velocity**: 90% completion
+- **Success factors**: Thorough grooming, accurate estimation for simple tasks
+- **Note**: One 4-point task blocked due to external API instability (not estimation issue)
+```
+
+### Benefits of Story Points in ASAF
+
+1. **Consistent Planning** - Task complexity is objective across sprints
+2. **Velocity Trends** - Track improvement in estimation accuracy over time
+3. **Capacity Planning** - Know how many story points can be completed per sprint
+4. **Retrospective Insights** - Analyze which complexity levels are estimated accurately
+5. **Iteration Mapping** - Automatic max iteration assignment based on complexity
+6. **Risk Identification** - 8-point tasks flag need for breakdown
+7. **Learning Tool** - See which estimates were accurate vs inaccurate and why
+
+### Story Points vs Time Estimates Comparison
+
+| Aspect | Story Points (ASAF) | Time Estimates (Traditional) |
+|--------|---------------------|------------------------------|
+| **Measurement** | Relative complexity | Hours/days |
+| **Executor Speed** | Independent | Dependent |
+| **Accuracy** | Consistent across sprints | Varies by context |
+| **Planning** | Points per sprint (velocity) | Hours available |
+| **Retrospective** | Velocity % | Schedule adherence |
+| **Usefulness for AI** | ✅ Highly relevant | ❌ Not meaningful |
+
+---
+
 ## Demo Generation Architecture
 
 ### Overview

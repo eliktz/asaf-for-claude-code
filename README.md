@@ -216,6 +216,163 @@ cd asaf
 
 ---
 
+## Demo Presentation Customization
+
+ASAF can generate **customized demo presentations** tailored to your audience and time constraints.
+
+### Generate Your First Demo
+
+```bash
+/asaf-demo
+```
+
+You'll be prompted to choose:
+1. **Length** - 5, 15, 30, or 45 minutes (or custom)
+2. **Audience** - Technical, Product, Executive, or Customer
+3. **Format** - Markdown slides, outline, or script
+4. **Diagrams** - Include Mermaid diagrams?
+5. **Enhancements** - Code examples, metrics, timeline, risks, next steps
+
+### Audience Types
+
+**Technical Team** (Engineers, Architects)
+- High technical depth with code examples
+- Architecture diagrams and implementation details
+- Edge cases and testing strategies
+```bash
+/asaf-demo
+# Choose: 1=technical, 2=15 min, diagrams=yes, enhancements=code,metrics
+```
+
+**Product Team** (PMs, Designers)
+- Balanced business and technical context
+- User flows and UX decisions
+- Acceptance criteria and success metrics
+```bash
+/asaf-demo
+# Choose: 2=product, 2=15 min, diagrams=yes (user flows)
+```
+
+**Executive** (Leadership, Stakeholders)
+- Business value and ROI focus
+- Timeline (Gantt chart) and risk mitigation
+- Zero technical jargon
+```bash
+/asaf-demo
+# Choose: 3=executive, 2=15 min, diagrams=no, enhancements=timeline
+```
+
+**Customer** (External Users)
+- Benefits and use cases only
+- Before/after transformation stories
+- No internal details whatsoever
+```bash
+/asaf-demo
+# Choose: 4=customer, 2=15 min, diagrams=no, enhancements=none
+```
+
+### Regenerate with Different Parameters
+
+Already have a demo? Change it quickly:
+
+```bash
+# Change to executive audience
+/asaf-demo-regenerate --audience executive
+
+# Make it 30 minutes
+/asaf-demo-regenerate --length 30
+
+# Add code examples and metrics
+/asaf-demo-regenerate --enhancements code,metrics
+
+# Multiple changes at once
+/asaf-demo-regenerate --audience product --length 45 --diagrams yes
+```
+
+### Convert to Presentation Slides
+
+The generated `DEMO-PRESENTATION.md` uses markdown slides format compatible with:
+
+**Marp** (Recommended)
+```bash
+# Install Marp CLI
+npm install -g @marp-team/marp-cli
+
+# Convert to PDF
+marp asaf/your-sprint/DEMO-PRESENTATION.md --pdf
+
+# Convert to PowerPoint
+marp asaf/your-sprint/DEMO-PRESENTATION.md --pptx
+
+# Convert to HTML
+marp asaf/your-sprint/DEMO-PRESENTATION.md --html
+```
+
+**Slidev**
+```bash
+# Create slides
+npx slidev asaf/your-sprint/DEMO-PRESENTATION.md
+```
+
+**reveal.js**
+```bash
+# Convert to HTML presentation
+pandoc DEMO-PRESENTATION.md -t revealjs -o presentation.html
+```
+
+### Example Workflows
+
+**Sprint Demo for Team**
+```bash
+# After implementation complete
+/asaf-demo
+# Choose: technical, 15 min, yes diagrams, code+metrics+risks
+
+# Present to team
+marp asaf/my-sprint/DEMO-PRESENTATION.md --pdf
+```
+
+**Executive Stakeholder Update**
+```bash
+# Generate executive version
+/asaf-demo-regenerate --audience executive --length 5
+
+# Quick 5-minute PDF
+marp asaf/my-sprint/DEMO-PRESENTATION.md --pdf
+```
+
+**Customer Onboarding**
+```bash
+# Customer-friendly demo
+/asaf-demo-regenerate --audience customer --length 30
+
+# Convert to shareable slides
+marp asaf/my-sprint/DEMO-PRESENTATION.md --pptx
+```
+
+### Output Files
+
+After running `/asaf-demo`, you'll get:
+
+**DEMO-PRESENTATION.md**
+- Markdown slides with `---` separators
+- Ready for Marp, Slidev, or reveal.js
+- Includes Mermaid diagrams (if enabled)
+
+**DEMO-CONFIG.json**
+- Stores all your choices
+- Enables regeneration
+- Tracks regeneration history
+
+### Tips
+
+- **Preview diagrams**: Use [mermaid.live](https://mermaid.live/) to edit diagrams
+- **Multiple versions**: Generate technical AND executive versions for different meetings
+- **Mid-sprint demos**: Works even during implementation (shows WIP status)
+- **No grooming**: Can generate simplified demo from just `initial.md`
+
+---
+
 ## Folder Structure
 
 ### Global Installation (Recommended)

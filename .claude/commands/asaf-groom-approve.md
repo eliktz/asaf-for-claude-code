@@ -6,6 +6,30 @@
 
 ---
 
+## Step 0: Verify Active Sprint
+
+1. Check if /asaf/.current-sprint.json exists
+   - If NO: Run auto-selection algorithm (see asaf-core.md)
+   - If YES: Read sprint name from file
+
+2. Validate selected sprint exists at /asaf/<sprint-name>/
+   - If NO: Sprint was deleted
+     - Delete stale /asaf/.current-sprint.json
+     - Log: "Selected sprint no longer exists, auto-selecting..."
+     - Run auto-selection algorithm
+   - If YES: Continue
+
+3. Validate sprint has .state.json
+   - Check /asaf/<sprint-name>/.state.json exists
+   - If NO but sprint folder exists:
+     - LENIENT WARNING: Log "Sprint has no .state.json (may be incomplete)"
+     - Continue anyway (developer may be fixing)
+   - If sprint folder missing: Already handled in step 2
+
+4. Set context: All subsequent operations use /asaf/<sprint-name>/
+
+---
+
 ## Prerequisites
 
 ### Validate State
@@ -172,9 +196,9 @@ Generating task breakdown...
 **Create**:
 1. Break feature into 3-8 executable tasks
 2. Order by dependency
-3. Estimate complexity per task
+3. Estimate complexity per task using story points
 4. Define execution pattern per task
-5. Set max iterations per task
+5. Set max iterations per task (based on complexity)
 
 ---
 
@@ -185,19 +209,27 @@ Generating task breakdown...
 
 Generated: [timestamp]
 Total Tasks: [N]
+Total Story Points: [sum of all task points]
 
 ---
 
 ## Task 1: [Task Name]
 
-**Complexity**: Low | Medium | High
+**Complexity**: [1|2|4|8] story points
+
+**Complexity Rationale**:
+[Brief explanation of why this complexity]
 
 **Description**:
 [Clear description of what needs to be implemented]
 
 **Execution Pattern**: executor → test → reviewer → executor
 
-**Max Iterations**: [2-3 based on complexity]
+**Max Iterations**: [based on complexity mapping below]
+- 1 point → 2 iterations
+- 2 points → 3 iterations
+- 4 points → 4 iterations
+- 8 points → 5 iterations (or consider breaking down)
 
 **Executor Profile**: [from decisions.md]
 
@@ -233,11 +265,23 @@ Task 1 (Foundation) → Task 2 (Uses Task 1) → Task 4 (Integrates)
                    ↘ Task 3 (Uses Task 1) ↗
 ```
 
-## Estimated Timeline
+## Sprint Complexity Summary
 
 - Total tasks: [N]
-- Estimated time: [hours] (based on complexity)
+- Total story points: [sum]
+- Breakdown:
+  - 1-point tasks: [count] ([sum] points)
+  - 2-point tasks: [count] ([sum] points)
+  - 4-point tasks: [count] ([sum] points)
+  - 8-point tasks: [count] ([sum] points)
+- Average complexity: [avg] points/task
 - Expected iterations: ~[N] total
+
+**Story Point Scale**:
+- **1 point (Trivial)**: Simple config, single file edit, well-defined change
+- **2 points (Simple)**: Straightforward implementation, clear requirements, minimal unknowns
+- **4 points (Complex)**: Multiple components, design decisions, integration points, many edge cases
+- **8 points (Very Complex)**: Architecture changes, high uncertainty, cross-cutting concerns, may need breakdown
 
 ---
 
@@ -299,16 +343,23 @@ Add task breakdown section:
 ## 📋 Task Breakdown
 
 **Total Tasks**: [N]
-**Estimated Time**: [hours]
+**Total Story Points**: [sum]
 
 ### Tasks
 
-1. **[Task name]** (Complexity: [Low/Med/High])
+1. **[Task name]** ([N] story points)
    - [Brief description]
    - Files: [count] files
+   - Max iterations: [N]
    - DoD: [key requirement]
 
 [Repeat for all tasks]
+
+**Complexity Distribution**:
+- 1-point: [count] tasks
+- 2-point: [count] tasks
+- 4-point: [count] tasks
+- 8-point: [count] tasks
 
 [See implementation/tasks.md for full details]
 
@@ -350,11 +401,12 @@ Updated SUMMARY.md with task breakdown.
 📋 Task Summary:
 
 [For each task, show one line]
-1. [Task name] ([Complexity], [max iter] iterations)
-2. [Task name] ([Complexity], [max iter] iterations)
+1. [Task name] ([N] points, [max iter] max iterations)
+2. [Task name] ([N] points, [max iter] max iterations)
 ...
 
-**Estimated Time**: [hours]
+**Total Story Points**: [sum]
+**Average Complexity**: [avg] points/task
 **Ready to implement**
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

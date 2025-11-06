@@ -8,6 +8,30 @@
 
 ---
 
+## Step 0: Verify Active Sprint
+
+1. Check if /asaf/.current-sprint.json exists
+   - If NO: Run auto-selection algorithm (see asaf-core.md)
+   - If YES: Read sprint name from file
+
+2. Validate selected sprint exists at /asaf/<sprint-name>/
+   - If NO: Sprint was deleted
+     - Delete stale /asaf/.current-sprint.json
+     - Log: "Selected sprint no longer exists, auto-selecting..."
+     - Run auto-selection algorithm
+   - If YES: Continue
+
+3. Validate sprint has .state.json
+   - Check /asaf/<sprint-name>/.state.json exists
+   - If NO but sprint folder exists:
+     - LENIENT WARNING: Log "Sprint has no .state.json (may be incomplete)"
+     - Continue anyway (developer may be fixing)
+   - If sprint folder missing: Already handled in step 2
+
+4. Set context: All subsequent operations use /asaf/<sprint-name>/
+
+---
+
 ## Prerequisites
 
 Check `.state.json`:
@@ -39,6 +63,7 @@ Read entire sprint history:
 4. **Demo**: presentation.md (what was delivered)
 5. **Personal Goals**: personal-goals.md (learning objectives)
 6. **Metrics**: Calculate from all sources
+7. **Velocity**: Calculate story point metrics from tasks.md and progress.md
 
 ---
 
@@ -56,6 +81,7 @@ Let's reflect on what we learned and how to improve.
 Sprint summary:
   - Duration: [total time]
   - Tasks: [X]/[N] completed
+  - Story Points: [X]/[N] completed ([%]% velocity)
   - Tests: [X] written, [X] passing
   - Iterations: [X] total
 
@@ -247,6 +273,58 @@ Wait for confirmation.
 - [Question raised by this sprint]
 - [Area to explore]
 - [Technique to try]
+
+---
+
+## Sprint Velocity Metrics
+
+**Story Points**:
+- Planned: [N] points
+- Completed: [X] points
+- **Velocity**: [X]/[N] = [%]%
+
+**Task Completion**:
+- Total tasks: [N]
+- Completed: [X] tasks ([%]%)
+- Blocked/Incomplete: [Y] tasks
+
+**Complexity Breakdown**:
+| Complexity | Planned | Completed | Completion Rate |
+|------------|---------|-----------|-----------------|
+| 1 point    | [N]     | [X]       | [%]%            |
+| 2 points   | [N]     | [X]       | [%]%            |
+| 4 points   | [N]     | [X]       | [%]%            |
+| 8 points   | [N]     | [X]       | [%]%            |
+
+**Iteration Efficiency**:
+- Average iterations per task: [X]
+- Tasks completed in 1 iteration: [X] ([%]%)
+- Tasks needing 3+ iterations: [X] ([%]%)
+
+**Velocity Analysis**:
+[If velocity < 70%]
+- **Low velocity**: [X]% completion
+- **Likely causes**: [Analysis of why - complexity underestimated, blockers, unclear requirements]
+- **Recommendation**: [How to improve - more grooming, break down 8-point tasks, etc.]
+
+[If velocity 70-90%]
+- **Good velocity**: [X]% completion
+- **Insight**: [What worked well, minor areas for improvement]
+
+[If velocity > 90%]
+- **Excellent velocity**: [X]% completion
+- **Success factors**: [Why estimation was accurate]
+- **Consider**: [May have overestimated or could take on more]
+
+**Velocity Trend** (if multiple sprints available):
+- Previous sprint: [X]%
+- This sprint: [Y]%
+- Trend: ↗️ Improving / ↔️ Stable / ↘️ Declining
+
+**Estimating Accuracy**:
+[For tasks that took more iterations than planned]
+- Task [X] ([N] points): Estimated [Y] iterations, actual [Z]
+- Lesson: [Why estimate was off - hidden complexity, dependencies, etc.]
 
 ---
 
@@ -559,6 +637,7 @@ Add final section:
 
 **Final Results**:
 - Tasks: [X]/[N] completed ([%]%)
+- Story Points: [X]/[N] completed (**[%]% velocity**)
 - Tests: [X] passing
 - Coverage: [%]%
 - Learning goals: [X] achieved, [Y] in progress
@@ -600,6 +679,7 @@ Total Duration: [start to finish]
 
 **Achievements**:
   - Tasks: [X]/[N] completed ([%]%)
+  - Story Points: [X]/[N] completed (**[%]% velocity**)
   - Tests: [X] written, [X] passing
   - Learning: [X] goals achieved
 
@@ -608,10 +688,11 @@ Total Duration: [start to finish]
   - Implementation: [duration]
   - Total: [duration]
 
-**Quality**:
+**Quality & Efficiency**:
   - Average iterations: [X] per task
   - Test coverage: [%]%
   - All edge cases handled: ✅
+  - Sprint velocity: [%]% (story points completed)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

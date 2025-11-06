@@ -61,6 +61,7 @@ asaf/
 │       ├── asaf-demo.md
 │       ├── asaf-retro.md
 │       ├── asaf-status.md
+│       ├── asaf-select.md
 │       ├── asaf-list.md
 │       ├── asaf-help.md
 │       ├── asaf-summary.md
@@ -84,6 +85,7 @@ When users run ASAF commands in their projects, this structure is created:
 ```
 user-project/
 ├── asaf/                    # Created by /asaf-init
+│   ├── .current-sprint.json # Sprint selection state (auto-created)
 │   ├── <sprint-name>/       # Full ASAF sprint
 │   │   ├── SUMMARY.md       # Single source of truth (human-readable)
 │   │   ├── .state.json      # Machine-readable state
@@ -124,6 +126,67 @@ user-project/
 ```
 
 **Critical**: All commands MUST validate state before execution. Check phase and prerequisites.
+
+---
+
+## Sprint Selection State
+
+### .current-sprint.json Format
+
+Located at `/asaf/.current-sprint.json`, this file tracks which sprint is currently active:
+
+```json
+{
+  "sprint": "sprint-name",
+  "selected_at": "2025-10-31T12:00:00Z",
+  "type": "full"
+}
+```
+
+### Auto-Selection Algorithm
+
+When `.current-sprint.json` is missing, commands automatically:
+1. Scan `/asaf/` for valid full sprints (have `.state.json`)
+2. Sort by `.state.json` modification time (most recent first)
+3. Use alphabetical order as tiebreaker
+4. Create `.current-sprint.json` with selected sprint
+5. Log: "Auto-selected sprint '<name>' (most recently modified)"
+6. Continue execution
+
+### Sprint Selection Validation Pattern (Step 0)
+
+All sprint-context commands include this as Step 0:
+
+```markdown
+## Step 0: Verify Active Sprint
+
+1. Check if /asaf/.current-sprint.json exists
+   - If NO: Run auto-selection algorithm (see asaf-core.md)
+   - If YES: Read sprint name from file
+
+2. Validate selected sprint exists at /asaf/<sprint-name>/
+   - If NO: Delete stale file, run auto-selection
+   - If YES: Continue
+
+3. Validate sprint has .state.json
+   - LENIENT: Warn but continue if missing
+
+4. Set context: All operations use /asaf/<sprint-name>/
+```
+
+### Commands Requiring Sprint Context
+
+All commands EXCEPT:
+- `/asaf-list` (lists all sprints)
+- `/asaf-help` (shows help)
+- `/asaf-select` (sets selection)
+- `/asaf-init` (creates new sprint, prompts to set as current)
+
+### Git Behavior
+
+`.current-sprint.json` can be:
+- **Committed**: Share active sprint across team/machines
+- **Ignored**: Add to `.gitignore` for local-only selection (recommended for solo work)
 
 ---
 
@@ -168,11 +231,12 @@ For each task:
 
 ### Core Workflow
 - `/asaf-init <name>` - Initialize sprint, create folder structure
+- `/asaf-select [name]` - Select active sprint (interactive if no name)
 - `/asaf-groom` - 30-45 min design conversation with Grooming Agent
 - `/asaf-groom-approve` - Lock grooming, generate tasks.md
 - `/asaf-impl` - Autonomous implementation (3-6 hours)
 - `/asaf-impl-pause` / `/asaf-impl-resume` - Control execution
-- `/asaf-status` - Current sprint state
+- `/asaf-status` - Current sprint state (shows selected sprint prominently)
 - `/asaf-demo` - Generate demo presentation
 - `/asaf-retro` - Learning retrospective
 
@@ -222,6 +286,779 @@ Used to:
 - Configure reviewer mode
 - Align tasks with learning objectives
 - Track skill progression in retrospectives
+
+---
+
+## Story Points System
+
+### Why Story Points Instead of Time Estimates
+
+ASAF uses **story points** for task complexity estimation instead of time-based estimates. This approach is more appropriate because:
+
+1. **Time-agnostic** - Claude works at a different pace than humans; time estimates are meaningless
+2. **Universal complexity measure** - Story points represent intrinsic complexity regardless of who executes
+3. **Industry standard** - Developers are already familiar with agile story points
+4. **Better for planning** - Forces clear distinction between simple vs complex tasks
+5. **Retrospective insights** - Enables velocity tracking and estimation accuracy analysis
+
+### Story Point Scale (1/2/4/8)
+
+ASAF uses a simplified Fibonacci-like scale:
+
+| Points | Complexity | Description | Max Iterations | Examples |
+|--------|------------|-------------|----------------|----------|
+| **1** | Trivial | Simple config change, single file edit, well-defined | 2 | Update constant, add field to schema, simple UI text change |
+| **2** | Simple | Straightforward implementation, clear requirements, minimal unknowns | 3 | Add validation rule, create simple endpoint, basic component |
+| **4** | Complex | Multiple components, design decisions, integration points, many edge cases | 4 | Authentication system, multi-step workflow, complex business logic |
+| **8** | Very Complex | Architecture changes, high uncertainty, cross-cutting concerns | 5 | Major refactoring, new architecture layer, third-party integration |
+
+**Note**: If a task is estimated at 8 points, consider breaking it down into smaller 2-4 point tasks.
+
+### Task Planning with Story Points
+
+During `/asaf-groom-approve`, the Task Planner Agent:
+
+1. **Analyzes requirements** from grooming documents
+2. **Breaks down feature** into 3-8 executable tasks
+3. **Assigns story points** to each task with rationale
+4. **Maps complexity to max iterations**:
+   - 1 point → 2 max iterations
+   - 2 points → 3 max iterations
+   - 4 points → 4 max iterations
+   - 8 points → 5 max iterations (or suggest breakdown)
+
+### tasks.md Format with Story Points
+
+```markdown
+## Task 1: Implement User Authentication
+
+**Complexity**: 4 story points
+
+**Complexity Rationale**:
+Multiple components required (middleware, session storage, password hashing),
+security considerations, integration with existing user model, multiple edge
+cases for invalid credentials and session management.
+
+**Max Iterations**: 4 (based on 4-point complexity)
+
+**Description**:
+[Task description...]
+
+**Definition of Done**:
+- [ ] Middleware authenticates requests
+- [ ] Sessions stored securely
+- [ ] Edge cases #1-5 handled
+- [ ] All tests passing
+```
+
+### Sprint Velocity Tracking
+
+During `/asaf-retro`, velocity metrics are calculated:
+
+**Velocity Formula**:
+```
+Velocity = (Completed Story Points / Planned Story Points) × 100%
+```
+
+**Example**:
+- Planned: 18 points (8 tasks)
+- Completed: 16 points (7 tasks, 1 blocked)
+- **Velocity: 88.9%** ← Good velocity
+
+### Velocity Interpretation
+
+| Velocity | Interpretation | Typical Actions |
+|----------|---------------|-----------------|
+| **< 70%** | Low - significant blockers or underestimation | Review grooming quality, break down complex tasks, check for unclear requirements |
+| **70-90%** | Good - normal range with minor issues | Minor adjustments, continue current approach |
+| **> 90%** | Excellent - accurate estimation or overestimation | Consider taking on slightly more complexity, verify estimates weren't inflated |
+
+### Retrospective Metrics
+
+The `/asaf-retro` command generates comprehensive velocity analysis:
+
+**Included in retro/learnings.md**:
+- Total story points (planned vs completed)
+- Velocity percentage
+- Complexity breakdown by point value
+- Iteration efficiency (avg iterations per task)
+- Tasks completed in 1 iteration (ideal execution)
+- Tasks needing 3+ iterations (complexity indicators)
+- Velocity trend (if multiple sprints tracked)
+- Estimating accuracy lessons
+
+**Example Velocity Analysis**:
+```markdown
+## Sprint Velocity Metrics
+
+**Story Points**:
+- Planned: 20 points
+- Completed: 18 points
+- **Velocity**: 90%
+
+**Complexity Breakdown**:
+| Complexity | Planned | Completed | Completion Rate |
+|------------|---------|-----------|-----------------|
+| 1 point    | 2       | 2         | 100%            |
+| 2 points   | 4       | 4         | 100%            |
+| 4 points   | 3       | 2         | 67%             |
+| 8 points   | 1       | 1         | 100%            |
+
+**Iteration Efficiency**:
+- Average iterations per task: 2.1
+- Tasks completed in 1 iteration: 5 (50%)
+- Tasks needing 3+ iterations: 2 (20%)
+
+**Velocity Analysis**:
+- **Excellent velocity**: 90% completion
+- **Success factors**: Thorough grooming, accurate estimation for simple tasks
+- **Note**: One 4-point task blocked due to external API instability (not estimation issue)
+```
+
+### Benefits of Story Points in ASAF
+
+1. **Consistent Planning** - Task complexity is objective across sprints
+2. **Velocity Trends** - Track improvement in estimation accuracy over time
+3. **Capacity Planning** - Know how many story points can be completed per sprint
+4. **Retrospective Insights** - Analyze which complexity levels are estimated accurately
+5. **Iteration Mapping** - Automatic max iteration assignment based on complexity
+6. **Risk Identification** - 8-point tasks flag need for breakdown
+7. **Learning Tool** - See which estimates were accurate vs inaccurate and why
+
+### Story Points vs Time Estimates Comparison
+
+| Aspect | Story Points (ASAF) | Time Estimates (Traditional) |
+|--------|---------------------|------------------------------|
+| **Measurement** | Relative complexity | Hours/days |
+| **Executor Speed** | Independent | Dependent |
+| **Accuracy** | Consistent across sprints | Varies by context |
+| **Planning** | Points per sprint (velocity) | Hours available |
+| **Retrospective** | Velocity % | Schedule adherence |
+| **Usefulness for AI** | ✅ Highly relevant | ❌ Not meaningful |
+
+---
+
+## Demo Generation Architecture
+
+### Overview
+
+The `/asaf-demo` and `/asaf-demo-regenerate` commands implement a **hybrid template-based presentation generator** that creates audience-specific demo presentations from ASAF sprint documentation.
+
+**Key principle**: Combine markdown command logic with separate reusable templates to maintain ASAF's file-based philosophy while enabling maintainable customization.
+
+### Architecture Components
+
+```
+.claude/commands/
+├── asaf-demo.md              # Interactive prompt-based generation
+├── asaf-demo-regenerate.md   # CLI-based regeneration
+└── templates/
+    └── demo/
+        ├── technical-team.md      # High technical depth
+        ├── product-team.md        # Balanced business + technical
+        ├── executive.md           # Business value focus
+        ├── customer.md            # Benefits-only, zero technical
+        └── slides/
+            ├── common/            # Shared across all audiences
+            │   ├── title.md
+            │   ├── agenda.md
+            │   └── qa.md
+            └── content/           # Audience-specific content
+                ├── architecture.md
+                ├── code-example.md
+                ├── business-value.md
+                ├── timeline.md
+                ├── metrics.md
+                ├── edge-cases.md
+                ├── testing.md
+                └── next-steps.md
+```
+
+### Template System
+
+#### Audience Templates
+
+Each template (`templates/demo/{audience}.md`) contains:
+
+1. **Metadata Section** (YAML frontmatter):
+```yaml
+---
+audience: technical-team
+technical_depth: high | medium | minimal | none
+business_focus: low | medium | high
+code_examples: yes | no | never
+diagrams: required | optional | timeline-only | simple-visuals-only
+---
+```
+
+2. **Slide Selection Map**:
+Defines which slides to include based on presentation length:
+- **Quick (5 min)**: 4-6 slides (Title, Context, Demo, Q&A)
+- **Standard (15 min)**: 10-15 slides (full flow without deep dives)
+- **Extended (30 min)**: 20-25 slides (includes deep dives, examples)
+- **Workshop (45 min)**: 30-35 slides (comprehensive with exercises)
+
+3. **Content Extraction Mappings** (11 detailed mappings):
+Maps ASAF source documents to slide content:
+```markdown
+### Mapping 1: Feature Overview
+**Source**: initial.md (entire file)
+**Target Slide**: "What We Built"
+**Extraction**: Take full feature description, reformat as bullet points
+
+### Mapping 2: Architecture
+**Source**: grooming/design.md → Architecture section
+**Target Slide**: "Technical Architecture" (+ diagram if enabled)
+**Extraction**: Component list, relationships, data flow
+
+### Mapping 3: Edge Cases
+**Source**: grooming/edge-cases.md (all scenarios)
+**Target Slide**: "Edge Cases Handled"
+**Extraction**: Group by category (Input, Auth, System, Security, Performance)
+[... 8 more mappings ...]
+```
+
+4. **Tone/Language Rules**:
+Defines terminology translations for each audience:
+```markdown
+# Technical Team
+- Use precise technical terms: "async/await", "REST API", "JWT"
+- Show code examples with syntax highlighting
+- Include architecture diagrams (Mermaid)
+
+# Executive
+- "Fast response time" → "Improved productivity"
+- "Scalable architecture" → "Growth-ready solution"
+- NEVER show code, NEVER use jargon
+- Include ROI framework and 3-year financial model
+```
+
+5. **Slide Sequence**:
+Ordered list of slides with conditional inclusion:
+```markdown
+## Slide Sequence (15-minute baseline)
+
+1. **Title Slide** (common/title.md)
+2. **Technical Context** - Why this feature? (initial.md)
+3. **Architecture** + diagram (design.md) [if diagrams enabled]
+4. **Implementation** + code (progress.md) [technical only]
+5. **Edge Cases** (edge-cases.md)
+6. **Testing Strategy** (tasks.md) [technical/product only]
+7. **Live Demo** (acceptance-criteria.md)
+8. **Performance** (progress.md metrics) [if enhancement enabled]
+9. **Business Value** (design.md) [product/executive/customer]
+10. **Timeline** (state.json + progress.md) [if enhancement enabled]
+11. **Risks & Mitigations** (edge-cases.md) [if enhancement enabled]
+12. **Next Steps** (retro/) [if enhancement enabled]
+13. **Q&A** (common/qa.md)
+```
+
+#### Common Slide Templates
+
+**Purpose**: Reusable slide building blocks shared across all audiences.
+
+Located in `templates/demo/slides/common/`:
+- `title.md` - Sprint name, tagline, date
+- `agenda.md` - Dynamic table of contents
+- `qa.md` - Closing slide with contact info
+
+**Variable placeholders**: `{sprint}`, `{tagline}`, `{date}`, `{items}`
+
+#### Content Slide Templates
+
+**Purpose**: Audience-specific slide layouts for common content types.
+
+Located in `templates/demo/slides/content/`:
+- `architecture.md` - System architecture with Mermaid diagram slot
+- `code-example.md` - Syntax-highlighted code block with explanation
+- `business-value.md` - ROI framework, metrics, value proposition
+- `timeline.md` - Gantt chart showing sprint progression
+- `metrics.md` - Performance/usage statistics with visualization
+- `edge-cases.md` - Tabular edge case coverage
+- `testing.md` - Test strategy and coverage stats
+- `next-steps.md` - Roadmap and follow-up actions
+
+### Interactive Prompt System (/asaf-demo)
+
+The `/asaf-demo` command implements a **7-phase execution flow** with 5 interactive prompts:
+
+#### Phase 1: Interactive Prompts
+
+**Prompt 1: Presentation Length**
+```
+Choose [1-5]:
+1. Quick (5 minutes)       → 4-6 slides
+2. Standard (15 minutes)   → 10-15 slides
+3. Extended (30 minutes)   → 20-25 slides
+4. Workshop (45 minutes)   → 30-35 slides
+5. Custom length (1-120)   → Formula-based
+
+Validation: 1-120 minutes, default to 15 if invalid after 3 attempts
+```
+
+**Prompt 2: Target Audience**
+```
+Choose [1-4]:
+1. Technical Team    → High depth, code examples, diagrams
+2. Product Team      → Balanced business + technical
+3. Executive         → Business value, ROI, zero jargon
+4. Customer          → Benefits only, zero technical
+
+Validation: Must select 1-4, determines template loading
+```
+
+**Prompt 3: Output Format**
+```
+Choose [1-3]:
+1. Markdown Slides   → Marp/Slidev/reveal.js compatible
+2. Outline          → Hierarchical bullet points
+3. Presentation Script → Speaker notes format
+
+Default: markdown-slides
+```
+
+**Prompt 4: Include Diagrams**
+```
+Include diagrams? [y/n]
+- Architecture (Mermaid graph)
+- User flows (Mermaid flowchart)
+- Timeline (Gantt chart)
+
+Default: yes (except for customer audience)
+```
+
+**Prompt 5: Enhancements**
+```
+Select enhancements (comma-separated or 'none'):
+1. code       → Add code examples from progress.md
+2. metrics    → Include performance/usage stats
+3. timeline   → Show sprint progression (Gantt)
+4. risks      → Risk analysis + mitigations
+5. next-steps → Roadmap and follow-up actions
+
+Validation: Check each enhancement has required source data
+```
+
+#### Phase 2: Template Loading & Slide Calculation
+
+**Formula**:
+```javascript
+base_slides = presentation_length_minutes × 0.75
+
+// Audience adjustments
+if (audience === "technical-team") base_slides += 2;
+if (audience === "executive") base_slides -= 2;
+
+// Diagram adjustment
+if (include_diagrams) base_slides += 1;
+
+// Enhancement adjustments
+enhancement_count = enhancements.length;
+base_slides += enhancement_count;
+
+// Round and clamp
+final_slide_count = Math.round(base_slides);
+final_slide_count = Math.max(4, Math.min(final_slide_count, 50));
+```
+
+**Example**: 30-minute executive presentation with timeline + risks, no diagrams
+```
+30 × 0.75 = 22.5 (base)
+- 2 (executive adjustment)
++ 0 (no diagrams)
++ 2 (timeline + risks enhancements)
+= 22.5 slides (rounded to 23)
+```
+
+#### Phase 3: Content Generation
+
+**Source Document Loading** (8 files):
+1. `initial.md` → Feature description
+2. `grooming/design.md` → Architecture, components, flows
+3. `grooming/edge-cases.md` → Edge case scenarios
+4. `grooming/acceptance-criteria.md` → Success criteria
+5. `grooming/decisions.md` → Technical choices
+6. `implementation/tasks.md` → Task breakdown
+7. `implementation/progress.md` → Implementation notes, code, metrics
+8. `.state.json` → Timeline, task counts
+
+**Content Extraction Logic**:
+```markdown
+For each slide in template sequence:
+  1. Load source document(s) specified in mapping
+  2. Extract relevant sections (markdown heading-based)
+  3. Apply audience tone/language rules
+  4. Format according to output format (slides/outline/script)
+  5. Replace {placeholders} with extracted content
+  6. Apply slide count density adjustment if needed
+```
+
+**Density Adjustment**: If extracted content produces slide count mismatch:
+- **Over count**: Combine related slides, summarize verbose sections
+- **Under count**: Split complex slides, add detail/examples
+
+#### Phase 4: Diagram Generation
+
+**Architecture Diagram** (Mermaid graph):
+```markdown
+```mermaid
+graph TB
+    Component1[{name}] --> Component2[{name}]
+    Component2 --> Database[(Database)]
+    Component3[External API] --> Component1
+```
+```
+**Source**: design.md Architecture section
+**Extraction**: Parse component list, infer relationships
+
+**User Flow Diagram** (Mermaid flowchart):
+```markdown
+```mermaid
+flowchart TD
+    Start[User starts] --> Action1[{step}]
+    Action1 --> Decision{Condition?}
+    Decision -->|Yes| Success[✅ Complete]
+    Decision -->|No| Action2[{alternate}]
+    Action2 --> Success
+```
+```
+**Source**: design.md User Flows section
+
+**Timeline Diagram** (Gantt chart):
+```markdown
+```mermaid
+gantt
+    title Sprint Timeline
+    dateFormat YYYY-MM-DD
+    section Grooming
+    Design Session: done, 2025-01-15, 2d
+    section Implementation
+    Task 1: done, 2025-01-17, 3d
+    Task 2: active, 2025-01-20, 2d
+    Task 3: crit, 2025-01-22, 1d
+```
+```
+**Source**: .state.json timestamps + tasks.md
+
+#### Phase 5: Enhancement Processing
+
+**Code Examples** (`code` enhancement):
+- **Source**: progress.md code blocks
+- **Processing**: Extract 2-3 key code snippets, add syntax highlighting
+- **Placement**: After implementation slide
+
+**Metrics** (`metrics` enhancement):
+- **Source**: progress.md performance notes, test results
+- **Processing**: Create table/chart of key metrics
+- **Placement**: Dedicated performance slide
+
+**Timeline** (`timeline` enhancement):
+- **Source**: .state.json timestamps
+- **Processing**: Generate Gantt chart (see diagram generation)
+- **Placement**: After demo slide
+
+**Risks** (`risks` enhancement):
+- **Source**: edge-cases.md → identify risks, decisions.md → mitigations
+- **Processing**: Create risk matrix (likelihood × impact)
+- **Placement**: After implementation slides
+
+**Next Steps** (`next-steps` enhancement):
+- **Source**: retro/ folder if exists, else infer from progress.md notes
+- **Processing**: Roadmap bullets, timelines, dependencies
+- **Placement**: Before Q&A slide
+
+#### Phase 6: Output Formatting
+
+**Markdown Slides Format** (Marp/Slidev compatible):
+```markdown
+---
+marp: true
+theme: default
+paginate: true
+---
+
+# Slide Title
+
+Content here
+
+---
+
+# Next Slide
+
+More content
+```
+
+**Outline Format**:
+```markdown
+# Presentation Outline: {sprint}
+
+## 1. Introduction (2 minutes)
+   - Feature overview
+   - Why we built this
+
+## 2. Technical Architecture (5 minutes)
+   - System components
+   - Data flow
+   [... hierarchical structure ...]
+```
+
+**Presentation Script Format**:
+```markdown
+# Presentation Script: {sprint}
+
+## Slide 1: Title
+**Display**: {sprint} - {tagline}
+**Speaker Notes**: Good morning everyone. Today I'll be presenting...
+
+## Slide 2: Context
+**Display**: {feature description}
+**Speaker Notes**: This feature addresses...
+```
+
+#### Phase 7: File Generation & State Update
+
+**Output Files**:
+
+1. `DEMO-PRESENTATION.md` - The generated presentation
+2. `DEMO-CONFIG.json` - Configuration for regeneration:
+```json
+{
+  "sprint": "sprint-name",
+  "generated_at": "2025-10-31T14:30:00Z",
+  "presentation_length_minutes": 30,
+  "audience_type": "executive",
+  "output_format": "markdown-slides",
+  "include_diagrams": false,
+  "enhancements": ["timeline", "risks"],
+  "slide_count": 23,
+  "template_version": "1.0",
+  "source_files": [
+    "initial.md",
+    "grooming/design.md",
+    "grooming/edge-cases.md",
+    "grooming/acceptance-criteria.md",
+    "grooming/decisions.md",
+    "implementation/tasks.md",
+    "implementation/progress.md",
+    ".state.json"
+  ]
+}
+```
+
+**State Update**:
+```json
+{
+  "phase": "demo",
+  "demo_generated": true,
+  "demo_generated_at": "2025-10-31T14:30:00Z"
+}
+```
+
+### Regeneration System (/asaf-demo-regenerate)
+
+**Purpose**: Modify presentation parameters without re-answering all prompts.
+
+**CLI Arguments**:
+```bash
+/asaf-demo-regenerate [OPTIONS]
+
+OPTIONS:
+  --audience <type>         # technical, product, executive, customer
+  --length <minutes>        # 5, 15, 30, 45, or 1-120
+  --format <format>         # markdown-slides, outline, script
+  --diagrams <yes|no>       # yes, no, y, n
+  --enhancements <list>     # code, metrics, timeline, risks, next-steps
+                            # (comma-separated, or "none")
+```
+
+**Precedence System**:
+```javascript
+// Load existing config
+config = read_json("DEMO-CONFIG.json");
+
+// Merge with CLI args (CLI overrides)
+merged = {
+  presentation_length_minutes: CLI.length ?? config.presentation_length_minutes,
+  audience_type: CLI.audience ?? config.audience_type,
+  output_format: CLI.format ?? config.output_format,
+  include_diagrams: CLI.diagrams ?? config.include_diagrams,
+  enhancements: CLI.enhancements ?? config.enhancements
+};
+
+// Regenerate presentation with merged config
+```
+
+**Regeneration Tracking**:
+```json
+{
+  "regenerated_at": "2025-10-31T15:00:00Z",
+  "regeneration_count": 2,
+  "regeneration_history": [
+    {
+      "regenerated_at": "2025-10-31T14:45:00Z",
+      "changes": ["audience: technical → executive"]
+    },
+    {
+      "regenerated_at": "2025-10-31T15:00:00Z",
+      "changes": ["length: 15 → 30", "enhancements: added 'timeline'"]
+    }
+  ]
+}
+```
+
+**Edge Cases**:
+- **Missing config**: Prompt to run `/asaf-demo` first
+- **Invalid CLI args**: Validate, show error, preserve original config
+- **Partial regeneration**: Update only changed sections (future enhancement)
+
+### Edge Case Handling
+
+**Comprehensive coverage** (15 edge cases documented in design.md):
+
+1. **Out of range input**: Clamp to 1-120 minutes
+2. **No grooming data**: Generate simplified demo from initial.md only
+3. **Express sprint**: Auto-adjust to 5-minute quick format
+4. **User cancels**: Clean exit, no files written
+5. **Slide count mismatch**: Auto-adjust density (combine/split slides)
+6. **Implementation incomplete**: Add WIP badge to slides
+7. **Missing enhancement data**: Use placeholders, warn user
+8. **No diagrams available**: Skip diagram generation
+9. **Multiple audiences**: Not supported, require single selection
+10. **Invalid inputs (3x)**: Default to standard/technical/markdown-slides
+11. **Cancel at preview**: Offer "remove enhancements" option
+12. **Very short presentation (<5 min)**: Minimum 4 slides enforced
+13. **Very long presentation (>60 min)**: Warn about attention span
+14. **Missing template file**: Fallback to technical-team.md
+15. **Config file corrupted**: Regenerate from scratch with prompts
+
+### Extension Guide: Custom Templates
+
+**To add a new audience template**:
+
+1. **Create template file**: `.claude/commands/templates/demo/{audience-name}.md`
+
+2. **Define metadata**:
+```yaml
+---
+audience: custom-audience-name
+technical_depth: high | medium | minimal | none
+business_focus: low | medium | high
+code_examples: yes | no | never
+diagrams: required | optional | timeline-only | simple-visuals-only
+---
+```
+
+3. **Define slide selection map**:
+```markdown
+## Slide Selection Map
+
+### Quick (5 minutes) - 5 slides
+1. Title (common/title.md)
+2. Custom intro slide
+3. Demo
+4. Value proposition
+5. Q&A (common/qa.md)
+
+### Standard (15 minutes) - 12 slides
+[... define sequence ...]
+```
+
+4. **Define 11 content extraction mappings**:
+```markdown
+### Mapping 1: Feature Overview
+**Source**: initial.md
+**Target Slide**: "Custom Feature Intro"
+**Extraction**: [describe extraction logic]
+[... 10 more mappings ...]
+```
+
+5. **Define tone/language rules**:
+```markdown
+## Language Rules
+
+### Terminology Translations
+- "Technical term" → "Audience-appropriate term"
+
+### Formatting Guidelines
+- Use {formatting style}
+- Avoid {red flags}
+```
+
+6. **Update `/asaf-demo` prompt**:
+```markdown
+### Prompt 2: Target Audience
+Choose [1-5]:
+1. Technical Team
+2. Product Team
+3. Executive
+4. Customer
+5. Custom Audience  ← ADD THIS
+```
+
+7. **Update installation**: Modify `install.sh` to copy new template
+
+8. **Test workflow**:
+```bash
+/asaf-demo
+# Select custom audience
+# Verify slide count, content, tone
+```
+
+**To add a new enhancement**:
+
+1. **Update enhancement prompt** in `asaf-demo.md`:
+```markdown
+6. custom-enhancement → Description
+```
+
+2. **Define source data requirements**:
+```markdown
+### Enhancement: Custom Enhancement
+**Required Source**: grooming/decisions.md (specific section)
+**Processing Logic**: [describe extraction/transformation]
+**Output**: [describe slide format]
+**Placement**: After [slide name]
+```
+
+3. **Update slide calculation formula**:
+```javascript
+if (enhancements.includes('custom-enhancement')) {
+  base_slides += 2; // Custom enhancement adds 2 slides
+}
+```
+
+4. **Implement validation**:
+```javascript
+if (enhancements.includes('custom-enhancement')) {
+  if (!file_exists('grooming/decisions.md')) {
+    warn("Custom enhancement requires decisions.md");
+    remove_from_enhancements('custom-enhancement');
+  }
+}
+```
+
+### Best Practices
+
+**When using demo commands**:
+- Run `/asaf-demo` after implementation complete for accurate metrics
+- Choose audience based on actual presentation context
+- Use regeneration for quick parameter tweaks
+- Preview slides before converting to presentation format
+- Customize templates for organization-specific branding
+
+**When modifying templates**:
+- Maintain consistent metadata structure across all templates
+- Test with sprints of varying complexity (simple vs. complex features)
+- Validate all 11 content mappings with real sprint data
+- Document tone/language rules clearly
+- Follow ASAF philosophy: human-readable markdown, no code dependencies
+
+**When debugging presentations**:
+- Check `DEMO-CONFIG.json` for actual parameters used
+- Verify source files exist and contain expected sections
+- Test each enhancement independently
+- Use outline format for quick content verification
+- Check slide count formula if count seems wrong
 
 ---
 
@@ -504,3 +1341,4 @@ ASAF 1.0.0 (Production Ready)
 - 4 agent personas defined
 - Express mode available
 - Pause/resume/review/retry capabilities
+- from now on, push changes to both repositories

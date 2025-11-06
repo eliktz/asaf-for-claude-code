@@ -6,26 +6,48 @@
 
 ---
 
-## Find Active Sprint
+## Step 0: Verify Active Sprint
 
-Look for `.state.json` files in:
-1. Current conversation context (if sprint active)
-2. Most recently updated sprint in `asaf/` folder
+1. Check if /asaf/.current-sprint.json exists
+   - If NO: Run auto-selection algorithm (see asaf-core.md)
+   - If YES: Read sprint name from file
 
-If no active sprint:
+2. Validate selected sprint exists at /asaf/<sprint-name>/
+   - If NO: Sprint was deleted
+     - Delete stale /asaf/.current-sprint.json
+     - Log: "Selected sprint no longer exists, auto-selecting..."
+     - Run auto-selection algorithm
+   - If YES: Continue
+
+3. Validate sprint has .state.json
+   - Check /asaf/<sprint-name>/.state.json exists
+   - If NO but sprint folder exists:
+     - LENIENT WARNING: Log "Sprint has no .state.json (may be incomplete)"
+     - Continue anyway (developer may be fixing)
+   - If sprint folder missing: Already handled in step 2
+
+4. Set context: All subsequent operations use /asaf/<sprint-name>/
+
+---
+
+## Read Current Sprint Selection
+
+After Step 0, you have the active sprint name.
+
+Read `/asaf/.current-sprint.json`:
+```json
+{
+  "sprint": "sprint-name",
+  "selected_at": "2025-10-31T12:00:00Z",
+  "type": "full"
+}
 ```
-ℹ️ No active sprint
 
-No sprint is currently in progress.
-
-Available sprints:
-  [List from asaf/ folder with status]
-
-Commands:
-  /asaf-init <name>     - Start new sprint
-  /asaf-resume <name>   - Resume existing sprint
-  /asaf-list            - See all sprints
-```
+Calculate:
+- **Selection timestamp**: Convert to human-readable ("2 hours ago", "3 days ago")
+- **Selection method**: Was it auto-selected or explicitly selected?
+  - Check if selection timestamp is very recent (< 1 second ago) → auto-selected
+  - Otherwise → explicitly selected (or persisted from previous session)
 
 ---
 
@@ -40,11 +62,19 @@ Read:
 
 ## Display Status
 
-Format varies by phase:
+**IMPORTANT**: Always display current sprint info prominently at the top of ALL status outputs.
+
+Format varies by phase, but all include the **Current Sprint** header first:
 
 ### During Grooming
 
 ```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 CURRENT SPRINT: [sprint-name]
+   Type: Full Sprint
+   Selected: [timestamp] ([auto-selected/explicitly selected])
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 🔄 ASAF Status: [sprint-name]
 
 Status: Grooming in Progress
@@ -76,6 +106,12 @@ Quick actions:
 ### After Grooming, Before Implementation
 
 ```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 CURRENT SPRINT: [sprint-name]
+   Type: Full Sprint
+   Selected: [timestamp] ([auto-selected/explicitly selected])
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 🔄 ASAF Status: [sprint-name]
 
 Status: Ready for Implementation
@@ -105,6 +141,12 @@ Quick actions:
 ### During Implementation
 
 ```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 CURRENT SPRINT: [sprint-name]
+   Type: Full Sprint
+   Selected: [timestamp] ([auto-selected/explicitly selected])
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 🔄 ASAF Status: [sprint-name]
 
 Status: Implementation in Progress
@@ -142,6 +184,12 @@ Quick actions:
 ### Implementation Blocked
 
 ```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 CURRENT SPRINT: [sprint-name]
+   Type: Full Sprint
+   Selected: [timestamp] ([auto-selected/explicitly selected])
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 ⚠️ ASAF Status: [sprint-name]
 
 Status: Implementation Blocked
@@ -177,6 +225,12 @@ Options:
 ### Implementation Complete
 
 ```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 CURRENT SPRINT: [sprint-name]
+   Type: Full Sprint
+   Selected: [timestamp] ([auto-selected/explicitly selected])
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 ✅ ASAF Status: [sprint-name]
 
 Status: Implementation Complete
@@ -207,6 +261,12 @@ Quick actions:
 ### During Demo/Retro
 
 ```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 CURRENT SPRINT: [sprint-name]
+   Type: Full Sprint
+   Selected: [timestamp] ([auto-selected/explicitly selected])
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 🔄 ASAF Status: [sprint-name]
 
 Status: [Demo/Retrospective] in Progress
@@ -230,6 +290,12 @@ Quick actions:
 ### Sprint Complete
 
 ```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 CURRENT SPRINT: [sprint-name]
+   Type: Full Sprint
+   Selected: [timestamp] ([auto-selected/explicitly selected])
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 ✅ ASAF Status: [sprint-name]
 
 Status: Complete 🎉
@@ -308,6 +374,7 @@ Be specific about what's happening:
 Always provide clear next commands:
 - Current phase commands
 - View commands
+- `/asaf-select` - Switch to different sprint (if multiple sprints exist)
 - Help command
 
 ---
@@ -338,10 +405,15 @@ Commands:
 ## Express Sprint Status
 
 ```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 CURRENT SPRINT: [task-name]
+   Type: Express Sprint (lightweight)
+   Selected: [timestamp] ([auto-selected/explicitly selected])
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 🚀 ASAF Express Status: [task-name]
 
 Status: [In Progress/Complete]
-Type: Express Sprint (lightweight)
 Started: [time]
 Elapsed: [duration]
 

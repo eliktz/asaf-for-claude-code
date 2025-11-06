@@ -201,6 +201,7 @@ cd asaf
 - `/asaf-groom` - Collaborative design (30-45 min)
 - `/asaf-groom-approve` - Lock grooming, create tasks
 - `/asaf-status` - Show current status
+- `/asaf-select [sprint-name]` - Select active sprint (interactive if no name)
 
 ### Coming in Phase 2-6
 - `/asaf-impl` - Run implementation (needs completion)
@@ -212,6 +213,163 @@ cd asaf
 - `/asaf-retro` - Retrospective
 - `/asaf-list` - List all sprints
 - `/asaf-summary` - View summary
+
+---
+
+## Demo Presentation Customization
+
+ASAF can generate **customized demo presentations** tailored to your audience and time constraints.
+
+### Generate Your First Demo
+
+```bash
+/asaf-demo
+```
+
+You'll be prompted to choose:
+1. **Length** - 5, 15, 30, or 45 minutes (or custom)
+2. **Audience** - Technical, Product, Executive, or Customer
+3. **Format** - Markdown slides, outline, or script
+4. **Diagrams** - Include Mermaid diagrams?
+5. **Enhancements** - Code examples, metrics, timeline, risks, next steps
+
+### Audience Types
+
+**Technical Team** (Engineers, Architects)
+- High technical depth with code examples
+- Architecture diagrams and implementation details
+- Edge cases and testing strategies
+```bash
+/asaf-demo
+# Choose: 1=technical, 2=15 min, diagrams=yes, enhancements=code,metrics
+```
+
+**Product Team** (PMs, Designers)
+- Balanced business and technical context
+- User flows and UX decisions
+- Acceptance criteria and success metrics
+```bash
+/asaf-demo
+# Choose: 2=product, 2=15 min, diagrams=yes (user flows)
+```
+
+**Executive** (Leadership, Stakeholders)
+- Business value and ROI focus
+- Timeline (Gantt chart) and risk mitigation
+- Zero technical jargon
+```bash
+/asaf-demo
+# Choose: 3=executive, 2=15 min, diagrams=no, enhancements=timeline
+```
+
+**Customer** (External Users)
+- Benefits and use cases only
+- Before/after transformation stories
+- No internal details whatsoever
+```bash
+/asaf-demo
+# Choose: 4=customer, 2=15 min, diagrams=no, enhancements=none
+```
+
+### Regenerate with Different Parameters
+
+Already have a demo? Change it quickly:
+
+```bash
+# Change to executive audience
+/asaf-demo-regenerate --audience executive
+
+# Make it 30 minutes
+/asaf-demo-regenerate --length 30
+
+# Add code examples and metrics
+/asaf-demo-regenerate --enhancements code,metrics
+
+# Multiple changes at once
+/asaf-demo-regenerate --audience product --length 45 --diagrams yes
+```
+
+### Convert to Presentation Slides
+
+The generated `DEMO-PRESENTATION.md` uses markdown slides format compatible with:
+
+**Marp** (Recommended)
+```bash
+# Install Marp CLI
+npm install -g @marp-team/marp-cli
+
+# Convert to PDF
+marp asaf/your-sprint/DEMO-PRESENTATION.md --pdf
+
+# Convert to PowerPoint
+marp asaf/your-sprint/DEMO-PRESENTATION.md --pptx
+
+# Convert to HTML
+marp asaf/your-sprint/DEMO-PRESENTATION.md --html
+```
+
+**Slidev**
+```bash
+# Create slides
+npx slidev asaf/your-sprint/DEMO-PRESENTATION.md
+```
+
+**reveal.js**
+```bash
+# Convert to HTML presentation
+pandoc DEMO-PRESENTATION.md -t revealjs -o presentation.html
+```
+
+### Example Workflows
+
+**Sprint Demo for Team**
+```bash
+# After implementation complete
+/asaf-demo
+# Choose: technical, 15 min, yes diagrams, code+metrics+risks
+
+# Present to team
+marp asaf/my-sprint/DEMO-PRESENTATION.md --pdf
+```
+
+**Executive Stakeholder Update**
+```bash
+# Generate executive version
+/asaf-demo-regenerate --audience executive --length 5
+
+# Quick 5-minute PDF
+marp asaf/my-sprint/DEMO-PRESENTATION.md --pdf
+```
+
+**Customer Onboarding**
+```bash
+# Customer-friendly demo
+/asaf-demo-regenerate --audience customer --length 30
+
+# Convert to shareable slides
+marp asaf/my-sprint/DEMO-PRESENTATION.md --pptx
+```
+
+### Output Files
+
+After running `/asaf-demo`, you'll get:
+
+**DEMO-PRESENTATION.md**
+- Markdown slides with `---` separators
+- Ready for Marp, Slidev, or reveal.js
+- Includes Mermaid diagrams (if enabled)
+
+**DEMO-CONFIG.json**
+- Stores all your choices
+- Enables regeneration
+- Tracks regeneration history
+
+### Tips
+
+- **Preview diagrams**: Use [mermaid.live](https://mermaid.live/) to edit diagrams
+- **Multiple versions**: Generate technical AND executive versions for different meetings
+- **Mid-sprint demos**: Works even during implementation (shows WIP status)
+- **No grooming**: Can generate simplified demo from just `initial.md`
 
 ---
 
@@ -354,6 +512,87 @@ Reviewer Agent = Claude + reviewer-agent.md + review context
 
 ---
 
+## Sprint Selection
+
+When working with multiple sprints in a project, ASAF automatically tracks which sprint is currently active using `/asaf/.current-sprint.json`.
+
+### How It Works
+
+**Auto-Selection**:
+- First time running a command: ASAF automatically selects the most recently modified sprint
+- Selection persists across sessions
+- All sprint-context commands operate on the selected sprint
+
+**Manual Selection**:
+```bash
+# Interactive mode - shows list with current highlighted
+/asaf-select
+
+# Direct selection
+/asaf-select sprint-name
+
+# Check current sprint
+/asaf-status
+```
+
+### Current Sprint Display
+
+Every `/asaf-status` shows the active sprint prominently:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 CURRENT SPRINT: add-authentication
+   Type: Full Sprint
+   Selected: 2 hours ago (auto-selected)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### Multi-Sprint Workflow
+
+```bash
+# Start first sprint
+/asaf-init feature-auth
+# ... work on it ...
+
+# Start second sprint (queued, not active yet)
+/asaf-init feature-payments
+# Choose "n" when asked to set as current
+
+# Continue working on auth
+/asaf-groom  # Operates on auth (still active)
+
+# Switch to payments
+/asaf-select feature-payments
+/asaf-groom  # Now operates on payments
+
+# Switch back
+/asaf-select feature-auth
+/asaf-impl   # Resumes auth implementation
+```
+
+### State File Format
+
+`/asaf/.current-sprint.json`:
+```json
+{
+  "sprint": "add-authentication",
+  "selected_at": "2025-10-31T12:00:00Z",
+  "type": "full"
+}
+```
+
+**Git Behavior**: You can choose to:
+- **Commit it**: Share active sprint across team/machines
+- **Ignore it**: Add to `.gitignore` for local-only selection
+
+Add to `.gitignore` (recommended for solo work):
+```gitignore
+# ASAF sprint selection (local preference)
+/asaf/.current-sprint.json
+```
+
+---
+
 ## Current Implementation Status
 
 ### ✅ Complete - Version 1.0.0 (Production Ready!)
@@ -377,8 +616,9 @@ Reviewer Agent = Claude + reviewer-agent.md + review context
 - [x] `asaf-retro.md` - Retrospective conversation
 - [x] `asaf-status.md` - Show sprint status
 
-**Express & Utilities (4 files)**:
+**Express & Utilities (5 files)**:
 - [x] `asaf-express.md` - Quick task workflow
+- [x] `asaf-select.md` - Sprint selection (interactive or direct)
 - [x] `asaf-list.md` - List all sprints
 - [x] `asaf-help.md` - Complete help system
 - [x] `asaf-summary.md` - View sprint summary (uses SUMMARY.md)
@@ -388,7 +628,7 @@ Reviewer Agent = Claude + reviewer-agent.md + review context
 - [x] `install.sh` - Global installation script
 - [x] `uninstall.sh` - Uninstall script
 
-**Total**: 22 files ready for production use!
+**Total**: 23 files ready for production use!
 
 ### 🎯 Optional Enhancements (Future)
 - [ ] `/asaf-resume <sprint>` - Resume old sprint (referenced but not critical)

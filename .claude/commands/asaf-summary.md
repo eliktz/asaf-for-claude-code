@@ -21,6 +21,30 @@ Run `/asaf-summary` to get:
 
 ---
 
+## Step 0: Verify Active Sprint
+
+1. Check if /asaf/.current-sprint.json exists
+   - If NO: Run auto-selection algorithm (see asaf-core.md)
+   - If YES: Read sprint name from file
+
+2. Validate selected sprint exists at /asaf/<sprint-name>/
+   - If NO: Sprint was deleted
+     - Delete stale /asaf/.current-sprint.json
+     - Log: "Selected sprint no longer exists, auto-selecting..."
+     - Run auto-selection algorithm
+   - If YES: Continue
+
+3. Validate sprint has .state.json
+   - Check /asaf/<sprint-name>/.state.json exists
+   - If NO but sprint folder exists:
+     - LENIENT WARNING: Log "Sprint has no .state.json (may be incomplete)"
+     - Continue anyway (developer may be fixing)
+   - If sprint folder missing: Already handled in step 2
+
+4. Set context: All subsequent operations use /asaf/<sprint-name>/
+
+---
+
 ## Prerequisites
 
 **Required**:

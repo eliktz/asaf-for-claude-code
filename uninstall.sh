@@ -33,6 +33,8 @@ fi
 # Count files before removal
 COMMAND_COUNT=$(ls ~/.claude/commands/asaf-*.md 2>/dev/null | wc -l)
 SHARED_COUNT=$(ls ~/.claude/commands/shared/{asaf-core,grooming-agent,executor-agent,reviewer-agent}.md 2>/dev/null | wc -l)
+TEMPLATE_COUNT=$(find ~/.claude/commands/templates/demo -name "*.md" 2>/dev/null | wc -l)
+AGENT_COUNT=$(ls ~/.claude/agents/asaf-*.md 2>/dev/null | wc -l)
 
 # Remove command files
 echo "🗑️  Removing ASAF commands..."
@@ -47,12 +49,24 @@ rm -f ~/.claude/commands/shared/executor-agent.md
 rm -f ~/.claude/commands/shared/reviewer-agent.md
 echo "   ✓ Shared files removed"
 
+# Remove templates
+echo "🗑️  Removing demo templates..."
+rm -rf ~/.claude/commands/templates/demo
+echo "   ✓ Demo templates removed"
+
+# Remove sub-agents
+echo "🗑️  Removing ASAF sub-agents..."
+rm -f ~/.claude/agents/asaf-*.md
+echo "   ✓ Sub-agents removed"
+
 echo ""
 echo "✅ ASAF uninstalled successfully!"
 echo ""
 echo "📊 Removed:"
-echo "   Commands: $COMMAND_COUNT files"
-echo "   Shared:   $SHARED_COUNT files"
+echo "   Commands:   $COMMAND_COUNT files"
+echo "   Shared:     $SHARED_COUNT files"
+echo "   Templates:  $TEMPLATE_COUNT files"
+echo "   Sub-Agents: $AGENT_COUNT files"
 echo ""
 echo "📁 Preserved:"
 echo "   - All sprint data in project asaf/ folders"

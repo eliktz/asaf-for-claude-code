@@ -46,6 +46,14 @@ echo "📋 Installing shared agent personas..."
 cp .claude/commands/shared/*.md ~/.claude/commands/shared/
 echo "   ✓ Shared files installed"
 
+echo "📋 Installing demo templates..."
+mkdir -p ~/.claude/commands/templates/demo/slides/common
+mkdir -p ~/.claude/commands/templates/demo/slides/content
+cp -r .claude/commands/templates/demo/*.md ~/.claude/commands/templates/demo/
+cp -r .claude/commands/templates/demo/slides/common/*.md ~/.claude/commands/templates/demo/slides/common/
+cp -r .claude/commands/templates/demo/slides/content/*.md ~/.claude/commands/templates/demo/slides/content/
+echo "   ✓ Demo templates installed"
+
 echo "🤖 Installing ASAF default sub-agents..."
 cp agents/*.md ~/.claude/agents/
 echo "   ✓ Sub-agents installed"
@@ -54,6 +62,7 @@ echo "   ✓ Sub-agents installed"
 COMMAND_COUNT=$(ls ~/.claude/commands/asaf-*.md 2>/dev/null | wc -l)
 SHARED_COUNT=$(ls ~/.claude/commands/shared/*.md 2>/dev/null | wc -l)
 AGENT_COUNT=$(ls ~/.claude/agents/asaf-*.md 2>/dev/null | wc -l)
+TEMPLATE_COUNT=$(find ~/.claude/commands/templates/demo -name "*.md" 2>/dev/null | wc -l)
 
 echo ""
 echo "✅ ASAF installed successfully!"
@@ -61,8 +70,10 @@ echo ""
 echo "📊 Installation Summary:"
 echo "   Commands:    $COMMAND_COUNT files"
 echo "   Shared:      $SHARED_COUNT files"
+echo "   Templates:   $TEMPLATE_COUNT files"
 echo "   Sub-Agents:  $AGENT_COUNT files"
 echo "   Location:    ~/.claude/commands/"
+echo "   Templates:   ~/.claude/commands/templates/demo/"
 echo "   Agents:      ~/.claude/agents/"
 echo ""
 echo "🎯 Next Steps:"

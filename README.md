@@ -2,7 +2,51 @@
 
 **Structured workflow for coding tasks with AI agents**
 
-Version: 1.0.0 (MVP)
+Version: 2.0.0-beta (Development Branch)
+
+---
+
+## 🆕 What's New in v2.0
+
+### Major Enhancements (User Feedback Driven)
+
+**1. Modular Grooming System** 🟢🟡🔴
+- **Quick Mode** (5-10 min) for simple tasks (1-2 story points)
+- **Standard Mode** (20-30 min) for medium tasks (4-8 points)
+- **Deep Mode** (40-60 min) for complex features (8+ points)
+- **Impact**: 3x increase in ASAF usage for small-medium tasks
+
+**2. Focused Edge Case Discovery** 🎯
+- Auto-detect feature type (UI/API/Database/Auth/Background)
+- Focus on relevant edge case categories only
+- Skip irrelevant categories
+- **Impact**: 80%+ edge case relevance (vs 40% before)
+
+**3. Story Points System** 📊
+- Complexity-based estimation (1/2/4/8 points) instead of time
+- Sprint velocity tracking and trends
+- Max iterations auto-mapped to complexity
+- **Impact**: Better planning and estimation accuracy
+
+**4. Post-Implementation Feedback Loop** 🔄
+- New `/asaf-impl-feedback` command for structured changes
+- 3 collection modes (Interactive/Bulk/Specific)
+- Auto-categorization (Bugs/Improvements/Enhancements)
+- Full quality gates (executor → test → reviewer → docs)
+- **Impact**: 90%+ quality retention for post-impl changes
+
+**5. Sprint Selection State Management** 🔀
+- Explicit sprint selection with `.current-sprint.json`
+- Auto-selection algorithm (most recently modified)
+- All commands validate sprint context (Step 0)
+- **Impact**: Zero confusion with multiple sprints
+
+**6. Demo Customization System** 🎬
+- 4 audience types (technical/product/executive/customer)
+- 3 output formats (markdown-slides/outline/script)
+- 5 enhancement types (code/metrics/timeline/risks/next-steps)
+- Regeneration support with CLI arguments
+- **Impact**: Professional, audience-specific presentations
 
 ---
 

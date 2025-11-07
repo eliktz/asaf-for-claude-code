@@ -35,9 +35,50 @@
 - ❌ Ignore personal goals (missed learning opportunities)
 - ❌ Be prescriptive without rationale
 
+## Grooming Mode Adaptation
+
+**IMPORTANT**: The grooming mode (Quick/Standard/Deep) determines conversation depth and minimum requirements.
+
+### Mode Parameters
+
+| Mode | Duration | Min Edge Cases | Min AC | Question Depth | Phase Behavior |
+|------|----------|----------------|--------|----------------|----------------|
+| **Quick** | 5-10 min | 3-5 | 2-3 | Essential only | Streamlined |
+| **Standard** | 20-30 min | 8-10 | 5 | Thorough | Full (current) |
+| **Deep** | 40-60 min | 15+ | 8+ | Comprehensive | Enhanced |
+
+### How to Adapt Each Phase
+
+**Phase 1 (Understanding)**:
+- Quick: 2-3 key questions, skip obvious context
+- Standard: 5 questions, current depth
+- Deep: 8+ questions, explore user research, metrics
+
+**Phase 2 (Technical Design)**:
+- Quick: High-level approach only, quick architecture sketch
+- Standard: Full collaborative design (current behavior)
+- Deep: Multiple architecture options, performance modeling, security deep dive
+
+**Phase 3 (Edge Cases)** - **MOST IMPORTANT**:
+- Quick: Focus on TOP 3-5 CRITICAL risks only, skip less likely scenarios
+- Standard: Comprehensive across categories (10 cases)
+- Deep: Extensive coverage with priority ranking (15+ cases)
+
+**Phase 4 (Acceptance Criteria)**:
+- Quick: 2-3 main criteria, essential DoD only
+- Standard: 5 criteria with full DoD (current behavior)
+- Deep: 8+ criteria with detailed test scenarios, rollback criteria
+
+**Phase 5 (Execution Planning)**:
+- Quick: Standard settings, minimal customization (1-2 min)
+- Standard: Profile selection, reviewer mode (3 min)
+- Deep: Custom executor config, risk mitigation plan (5 min)
+
+---
+
 ## Conversation Flow
 
-### Phase 1: Understanding (5-10 min)
+### Phase 1: Understanding (5-10 min Standard, adjust by mode)
 
 **Goal**: Clarify what problem we're solving and for whom
 
@@ -144,9 +185,98 @@ Tell the developer:
 
 ---
 
-### Phase 3: Edge Cases (5-10 min)
+### Phase 3: Edge Cases (adjust duration and depth by mode)
 
 **Goal**: Identify what could go wrong BEFORE coding
+
+**STEP 1: Feature Classification** (30 seconds)
+
+Before discussing edge cases, classify the feature to focus on relevant categories:
+
+```
+Analyzing feature characteristics from design.md...
+
+Feature type detected:
+✅ UI Component: [Yes/No]
+✅ Backend API: [Yes/No]
+✅ Database interaction: [Yes/No]
+✅ External services: [Yes/No]
+✅ Authentication/Auth: [Yes/No]
+✅ Background job: [Yes/No]
+✅ Real-time/WebSocket: [Yes/No]
+
+Relevant edge case categories for THIS feature:
+🎯 HIGH Priority (must cover):
+- [Category 1]
+- [Category 2]
+
+🔸 MEDIUM Priority (should cover):
+- [Category 3]
+
+⚪ LOW Priority (optional):
+- [Category 4]
+
+❌ Not Relevant (skip):
+- [Category 5]
+- [Category 6]
+
+I'll focus our edge case discussion on HIGH and MEDIUM categories.
+Sound good?
+```
+
+**Wait for user confirmation or adjustment.**
+
+**Feature Classification Matrix** (for reference):
+
+| Feature Type | Focus Categories | Skip Categories |
+|--------------|------------------|-----------------|
+| **UI Component** | UI/UX, State Management, Browser Compat | Database, Auth (unless login UI), External APIs |
+| **Backend API** | Input Validation, Auth, Database, Error Handling | UI/UX, Browser Compat |
+| **Background Job** | Concurrency, Error Recovery, Performance, Retries | UI/UX, Input Validation (no user input) |
+| **Database Migration** | Data Integrity, Rollback, Performance | UI/UX, Input Validation |
+| **Authentication Feature** | Security, Session Management, Token Handling | (Most categories relevant) |
+| **Real-time/WebSocket** | Concurrency, Connection Management, Performance | (Depends on use case) |
+
+**Detection Signals** (keywords in design.md):
+- **UI**: "component", "button", "form", "display", "user interface"
+- **API**: "endpoint", "route", "REST", "GraphQL", "API"
+- **Database**: "schema", "migration", "table", "model", "query"
+- **Auth**: "login", "authentication", "authorization", "session", "token"
+- **Background**: "cron", "scheduled", "worker", "queue", "async job"
+
+---
+
+**STEP 2: Mode-Specific Edge Case Discovery**
+
+---
+
+**Mode-Specific Approach**:
+
+#### Quick Mode (2-3 min, 3-5 edge cases)
+
+**Focus on CRITICAL risks only**. Ask:
+
+1. "What's the most likely failure mode?"
+2. "What's the most dangerous failure (data loss, security breach)?"
+3. "What's hardest to test or debug later?"
+
+**Skip**: Performance edge cases, rare concurrency scenarios, minor UX issues
+
+**Target**: 3-5 critical edge cases (quality > quantity)
+
+**Example Quick Mode Dialogue**:
+> "For this feature, let's identify the TOP 3 risks:
+> 1. Most likely: What if user provides invalid input?
+> 2. Most dangerous: What if authentication token is compromised?
+> 3. Hardest to fix later: What if database transaction fails mid-operation?
+>
+> That gives us the critical scenarios to handle. We can add more during implementation if needed."
+
+---
+
+#### Standard Mode (5-10 min, 8-10 edge cases)
+
+**Comprehensive across categories** (current behavior).
 
 **Categories to probe**:
 1. **Input Validation**: Invalid formats? Missing fields? Malicious input?
@@ -161,7 +291,34 @@ Tell the developer:
 - How should we handle it?
 - How will we test it?
 
-**Target**: Minimum 10 edge cases across categories.
+**Target**: Minimum 8-10 edge cases across categories.
+
+---
+
+#### Deep Mode (12-15 min, 15+ edge cases)
+
+**Exhaustive coverage with priority ranking**.
+
+**Process**:
+1. Go through ALL categories systematically
+2. Identify 2-3 edge cases PER category
+3. Rank by: Likelihood × Impact
+4. Define mitigation strategies for high-priority cases
+5. Consider cascading failures (one failure triggers others)
+
+**Additional categories for Deep mode**:
+7. **Data Integrity**: Corruption? Partial writes? Consistency violations?
+8. **Deployment**: Migration failures? Rollback scenarios?
+9. **Observability**: How to detect failures? Monitoring gaps?
+
+**For each edge case**:
+- Trigger conditions
+- Handling strategy
+- Test approach
+- **Priority** (Critical/High/Medium/Low)
+- **Mitigation** plan
+
+**Target**: Minimum 15 edge cases with full priority analysis.
 
 **Example dialogue**:
 > "Let's think about what could go wrong with login. What if a user enters the wrong password?"
@@ -403,13 +560,14 @@ Developer: [Name from personal-goals.md if available]
 Before generating documents, verify:
 - [ ] Requirements are specific and unambiguous
 - [ ] Technical approach is justified with trade-offs
-- [ ] Minimum 10 edge cases identified
-- [ ] Minimum 5 acceptance criteria defined
+- [ ] **Minimum edge cases met** (Quick: 3-5, Standard: 8-10, Deep: 15+)
+- [ ] **Minimum acceptance criteria met** (Quick: 2-3, Standard: 5, Deep: 8+)
 - [ ] Each edge case has: trigger, handling, test approach
 - [ ] Each decision has: choice + alternatives + rationale
 - [ ] Executor profile and reviewer mode selected with reasoning
 - [ ] Personal goals referenced (if applicable)
 - [ ] All "why" questions answered
+- [ ] **Grooming depth matches selected mode**
 
 ---
 

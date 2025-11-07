@@ -232,10 +232,11 @@ For each task:
 ### Core Workflow
 - `/asaf-init <name>` - Initialize sprint, create folder structure
 - `/asaf-select [name]` - Select active sprint (interactive if no name)
-- `/asaf-groom` - 30-45 min design conversation with Grooming Agent
+- `/asaf-groom` - Modular design conversation (Quick/Standard/Deep modes)
 - `/asaf-groom-approve` - Lock grooming, generate tasks.md
 - `/asaf-impl` - Autonomous implementation (3-6 hours)
 - `/asaf-impl-pause` / `/asaf-impl-resume` - Control execution
+- `/asaf-impl-feedback` - Structured post-implementation changes with quality gates
 - `/asaf-status` - Current sprint state (shows selected sprint prominently)
 - `/asaf-demo` - Generate demo presentation
 - `/asaf-retro` - Learning retrospective
@@ -286,6 +287,247 @@ Used to:
 - Configure reviewer mode
 - Align tasks with learning objectives
 - Track skill progression in retrospectives
+
+---
+
+## Modular Grooming System
+
+### Why Modular Grooming?
+
+**Problem**: Original ASAF grooming took 30-45 minutes for ALL features, causing users to skip ASAF for simple tasks.
+
+**Solution**: Three grooming modes that match depth to complexity.
+
+### Grooming Modes
+
+| Mode | Duration | Use Case | Story Points | Min Edge Cases | Min AC |
+|------|----------|----------|--------------|----------------|--------|
+| **🟢 Quick** | 5-10 min | Simple, clear requirements | 1-2 | 3-5 | 2-3 |
+| **🟡 Standard** | 20-30 min | Medium complexity | 4-8 | 8-10 | 5 |
+| **🔴 Deep** | 40-60 min | Complex, many unknowns | 8+ | 15+ | 8+ |
+
+### Mode Selection
+
+At the start of `/asaf-groom`, user chooses mode based on feature complexity:
+
+```
+How complex is this feature?
+
+1. Simple (1-2 points) → Quick Grooming (5-10 min)
+2. Medium (4-8 points) → Standard Grooming (20-30 min)
+3. Complex (8+ points) → Deep Grooming (40-60 min)
+```
+
+### Mode-Adaptive Behavior
+
+**Quick Mode** (Streamlined):
+- 2-3 key questions in Phase 1 (Understanding)
+- High-level approach only in Phase 2 (Technical Design)
+- TOP 3-5 critical risks only in Phase 3 (Edge Cases)
+- 2-3 main criteria in Phase 4 (Acceptance Criteria)
+- Standard settings in Phase 5 (Execution Planning)
+
+**Standard Mode** (Thorough):
+- Full 5-question exploration
+- Collaborative design with trade-offs
+- Comprehensive edge cases (10 across categories)
+- 5 detailed acceptance criteria
+- Profile and reviewer selection
+
+**Deep Mode** (Comprehensive):
+- 8+ questions with user research
+- Multiple architecture options
+- Extensive edge cases (15+) with priority ranking
+- 8+ criteria with test scenarios
+- Custom executor config, risk mitigation
+
+### Benefits
+
+1. **Faster for simple tasks**: Quick mode (5-10 min) vs old (30-45 min)
+2. **Appropriate rigor**: Match depth to complexity
+3. **No skipping**: Users use ASAF even for small tasks
+4. **Quality maintained**: Minimum requirements enforced per mode
+
+### Impact
+
+- **Expected**: 3x increase in ASAF usage for small-medium tasks
+- **User satisfaction**: "Grooming no longer too long"
+
+---
+
+## Focused Edge Case Discovery
+
+### Why Focused Edge Cases?
+
+**Problem**: Grooming asked about ALL edge case categories (input, auth, database, API, etc.) even when not relevant, wasting time.
+
+**Solution**: Feature classification + category filtering.
+
+### How It Works
+
+**Step 1: Feature Classification** (30 seconds)
+
+Before discussing edge cases, Claude analyzes the feature:
+
+```
+Analyzing feature characteristics from design.md...
+
+Feature type detected:
+✅ UI Component: Yes
+✅ Backend API: No
+✅ Database interaction: No
+✅ External services: No
+
+Relevant edge case categories for THIS feature:
+🎯 HIGH Priority (must cover):
+- UI/UX edge cases
+- State management
+
+🔸 MEDIUM Priority (should cover):
+- Browser compatibility
+
+❌ Not Relevant (skip):
+- Database errors
+- API failures
+- Authentication
+```
+
+**Step 2: Targeted Questions**
+
+Only ask about HIGH and MEDIUM priority categories:
+
+- ✅ "What if user toggles dark mode while modal is open?" (UI/UX)
+- ✅ "What if localStorage is disabled?" (State)
+- ❌ Skip: "What if database is down?" (Not relevant for UI-only feature)
+
+### Feature Classification Matrix
+
+| Feature Type | Focus Categories | Skip Categories |
+|--------------|------------------|-----------------|
+| **UI Component** | UI/UX, State, Browser | Database, Auth, API |
+| **Backend API** | Input, Auth, Database, Errors | UI/UX, Browser |
+| **Background Job** | Concurrency, Recovery, Retries | UI/UX, Input |
+| **Database Migration** | Data Integrity, Rollback | UI/UX, Input |
+| **Authentication** | Security, Session, Tokens | (Most relevant) |
+
+### Benefits
+
+1. **Relevant edge cases**: 80%+ relevance (vs 40% before)
+2. **Less wasted time**: Skip irrelevant categories
+3. **Better focus**: Deep dive on what matters
+4. **Quality maintained**: Still comprehensive for relevant categories
+
+### Example
+
+**Before** (Generic approach):
+- 10 edge cases, 4 relevant, 6 irrelevant → 40% relevance
+
+**After** (Focused approach):
+- 5 edge cases, 5 relevant, 0 irrelevant → 100% relevance
+
+---
+
+## Post-Implementation Feedback Loop
+
+### Why /asaf-impl-feedback?
+
+**Problem**: After `/asaf-impl`, users provide feedback in ad-hoc conversations:
+- Changes made without reviewer oversight
+- No edge case validation
+- Tests not updated
+- Quality degrades
+
+**Solution**: Structured feedback with same quality gates as implementation.
+
+### How It Works
+
+**Step 1: Collect Feedback** (3 modes)
+
+1. **Interactive Review**: Claude walks through each task
+2. **Bulk Feedback**: User provides all feedback upfront
+3. **Specific Changes**: User has exact changes to make
+
+**Step 2: Categorize**
+
+```
+Feedback Summary:
+
+🔴 BUGS (must fix):
+- Task 2: Login fails with special characters
+
+🟡 IMPROVEMENTS (should fix):
+- Task 1: Error messages too technical
+- Task 3: Missing logging
+
+🟢 ENHANCEMENTS (nice to have):
+- Task 4: Add "remember me" checkbox
+
+Which items should I address?
+1. All
+2. Bugs + improvements only
+3. Bugs only
+4. Custom selection
+```
+
+**Step 3: Execute with Quality Gates**
+
+For each feedback item:
+
+1. **Executor Phase**: Implement change
+2. **Test Phase**: Run tests, add new tests if needed
+3. **Reviewer Phase**: Check against grooming docs
+   - ✅ Aligns with design.md?
+   - ✅ Edge case coverage maintained?
+   - ✅ Test coverage sufficient?
+   - ✅ Code quality met?
+4. **Documentation Phase**: Update progress.md
+
+**Step 4: Update Documentation**
+
+All feedback tracked in `implementation/progress.md`:
+
+```markdown
+### Feedback Iteration - Round 1
+
+#### Feedback Item 1: Fix special character bug
+**Category**: Bug
+**Status**: ✅ Complete
+
+**Changes**:
+- src/auth/validation.ts (updated regex)
+
+**Tests**:
+- Added: test_password_with_special_chars()
+
+**Reviewer Notes**:
+✅ Aligns with edge case #4
+✅ Test coverage: 100%
+```
+
+### Multiple Feedback Rounds
+
+Can run `/asaf-impl-feedback` multiple times:
+
+```
+Round 1: Fix 3 bugs, 2 improvements
+Round 2: Add 1 enhancement, refactor 1 module
+Round 3: Polish error messages
+```
+
+All tracked in progress.md and SUMMARY.md.
+
+### Benefits
+
+1. **Quality maintained**: Same rigor as /asaf-impl
+2. **All feedback documented**: Easy to track what changed
+3. **Tests updated**: Coverage doesn't degrade
+4. **Reviewer oversight**: No ad-hoc changes bypassing quality gates
+5. **Categorization**: Prioritize bugs over enhancements
+
+### Impact
+
+- **Expected**: 90%+ of feedback changes pass quality gates
+- **Quality retention**: Post-impl changes maintain implementation quality
 
 ---
 

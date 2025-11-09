@@ -112,9 +112,9 @@ This persona includes:
 
 ---
 
-## Opening Message
+## Select Grooming Mode
 
-Show the user:
+Before starting, determine the appropriate grooming depth:
 
 ```
 👋 Let's groom the "[sprint-name]" feature together.
@@ -130,11 +130,78 @@ I also see you're working on:
 [If codebase context relevant]
 I noticed your project uses [detected stack] with [key patterns].
 
-This grooming session will take about 30-45 minutes. We'll cover:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Before we start, let's match grooming depth to your task complexity.
+
+How complex is this feature? (Estimate in story points if you can)
+
+1. 🟢 Simple (1-2 story points)
+   - Clear requirements, straightforward implementation
+   - Examples: Add validation rule, simple UI change, config update
+   → **Quick Grooming** (5-10 minutes)
+   → Minimum 3-5 edge cases, 2-3 acceptance criteria
+
+2. 🟡 Medium (4-8 story points)
+   - Some design decisions, multiple components involved
+   - Examples: New API endpoint, multi-step workflow, integration
+   → **Standard Grooming** (20-30 minutes)
+   → Minimum 8-10 edge cases, 5 acceptance criteria
+
+3. 🔴 Complex (8+ story points)
+   - Significant design work, many unknowns, architecture impact
+   - Examples: Authentication system, major refactor, new subsystem
+   → **Deep Grooming** (40-60 minutes)
+   → Minimum 15+ edge cases, 8+ acceptance criteria
+
+Enter your choice [1-3]:
+```
+
+**Wait for user selection.**
+
+**Store the selected mode** for use throughout the conversation:
+- `grooming_mode = "quick" | "standard" | "deep"`
+- `min_edge_cases = 3 | 8 | 15`
+- `min_acceptance_criteria = 2 | 5 | 8`
+- `estimated_duration = "5-10 min" | "20-30 min" | "40-60 min"`
+
+**Validate selection against complexity signals**:
+
+If user chooses "quick" but initial.md has > 100 words or mentions complex patterns:
+```
+⚠️ Note: Your feature description suggests some complexity.
+   Quick grooming works best for very simple, well-defined tasks.
+
+   Are you sure you want Quick mode?
+   - Yes, keep Quick (I know exactly what to build)
+   - No, switch to Standard (safer choice)
+```
+
+---
+
+## Opening Message (After Mode Selection)
+
+Show the user:
+
+```
+✅ [Mode Selected]: [Quick/Standard/Deep] Grooming
+
+This session will take approximately [duration].
+
+[If Quick mode]
+I'll focus on the essentials: key decisions, critical edge cases, and main acceptance criteria.
+
+[If Standard mode]
+We'll have a thorough conversation covering requirements, design, edge cases, and acceptance criteria.
+
+[If Deep mode]
+We'll do comprehensive design exploration with multiple options, extensive edge cases, and detailed acceptance criteria.
+
+We'll cover:
 1. Requirements clarification (what & why)
 2. Technical design (how)
-3. Edge cases (what could go wrong)
-4. Acceptance criteria (how to verify)
+3. Edge cases (what could go wrong) [depth varies by mode]
+4. Acceptance criteria (how to verify) [depth varies by mode]
 5. Execution planning (agents & review style)
 
 Ready to begin?
@@ -673,6 +740,7 @@ _This log captures the full context of design decisions for future reference._
   "type": "full",
   "phase": "grooming",
   "status": "complete",
+  "grooming_mode": "[quick|standard|deep]",
   "grooming_approved": false,
   "planning_complete": false,
   "created": "[original timestamp]",

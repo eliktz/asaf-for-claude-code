@@ -95,14 +95,28 @@ Run: /asaf-groom-continue
 Read grooming/edge-cases.md
 Count edge cases (look for numbered items)
 
-If < 8:
+Read .state.json to determine grooming_mode (if present)
+Default to "standard" if not specified
+
+Mode-based minimums:
+- Quick mode: 3 edge cases
+- Standard mode: 8 edge cases
+- Deep mode: 15 edge cases
+
+If count < minimum for mode:
 ```
-🔴 ERROR: Insufficient edge cases
+🔴 ERROR: Insufficient edge cases for [mode] mode
 
 Found: [N] edge cases
-Required: Minimum 8
+Required for [mode] mode: Minimum [X]
 
 Edge cases are critical for quality implementation.
+
+[If mode is Quick and < 3]
+Even for simple features, at least 3 critical edge cases should be identified.
+
+[If mode is Standard and < 8]
+Standard grooming requires comprehensive edge case coverage.
 
 Options:
   /asaf-groom-continue  - Add more edge cases
@@ -117,14 +131,28 @@ Options:
 Read grooming/acceptance-criteria.md
 Count acceptance criteria (look for ## AC headers)
 
-If < 5:
+Read .state.json to determine grooming_mode (if present)
+Default to "standard" if not specified
+
+Mode-based minimums:
+- Quick mode: 2 acceptance criteria
+- Standard mode: 5 acceptance criteria
+- Deep mode: 8 acceptance criteria
+
+If count < minimum for mode:
 ```
-🔴 ERROR: Insufficient acceptance criteria
+🔴 ERROR: Insufficient acceptance criteria for [mode] mode
 
 Found: [N] acceptance criteria
-Required: Minimum 5
+Required for [mode] mode: Minimum [X]
 
 Acceptance criteria define what "done" means.
+
+[If mode is Quick and < 2]
+Even for simple features, at least 2 acceptance criteria should be defined.
+
+[If mode is Standard and < 5]
+Standard grooming requires comprehensive acceptance criteria.
 
 Options:
   /asaf-groom-continue  - Add more criteria

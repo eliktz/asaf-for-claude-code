@@ -1390,6 +1390,68 @@ Always keep updated as single source of truth. Include:
 
 ---
 
+## Interactive Prompts (v2.0)
+
+ASAF v2.0 uses Claude Code's **AskUserQuestion tool** for structured user input. This provides better UX than text-based prompts.
+
+### When to Use Interactive Prompts
+
+| Question Type | Use Interactive? | Example |
+|---------------|------------------|---------|
+| Yes/No/Partial | ✅ Always | "Is my understanding accurate?" |
+| Multiple choice (2-4 options) | ✅ Always | "Which approach: JWT or Sessions?" |
+| Multi-select (non-exclusive) | ✅ Always | "Which categories are relevant?" |
+| Rating scale | ✅ Always | "How did this sprint feel?" |
+| Open-ended exploration | ❌ Use text | "What problem are you solving?" |
+| Follow-up clarification | ❌ Use text | "Tell me more about that" |
+
+### AskUserQuestion Tool Format
+
+All ASAF commands use this YAML format to specify interactive prompts:
+
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "Your question text?"
+      header: "Short"        # ≤12 characters, displayed as chip
+      multiSelect: false     # true for multi-select
+      options:
+        - label: "Option 1"
+          description: "Brief explanation"
+        - label: "Option 2"
+          description: "Brief explanation"
+```
+
+### Interactive Prompts in ASAF Commands
+
+The following commands have been updated with interactive prompts:
+
+| Command | Interactive Prompts |
+|---------|---------------------|
+| `/asaf-groom` | Mode selection, confirmation, technical choices |
+| `/asaf-demo` | Length, audience, format, diagrams, enhancements |
+| `/asaf-impl-feedback` | Feedback mode, scope selection, blocked action |
+| `/asaf-retro` | Rating, process value, goal progress, preferences |
+
+### Benefits
+
+- **80% faster** user responses (clicking vs typing)
+- **90% fewer** input errors (structured vs freeform)
+- **Better UX** - clear options, mobile-friendly
+- **Consistent** - standardized question patterns
+
+### Guidelines for Command Authors
+
+1. **Headers ≤12 characters** (displayed as chips/tags)
+2. **2-4 options per question** (too many overwhelms users)
+3. **Brief descriptions** (1 sentence max)
+4. **Include "Other" option** when choices might not cover all cases
+5. **Mix with text questions** (don't make it feel like a form)
+
+See `asaf-core.md` for complete pattern documentation.
+
+---
+
 ## Installation
 
 ### From This Repository

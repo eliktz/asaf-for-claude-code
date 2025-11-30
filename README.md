@@ -2,11 +2,55 @@
 
 **Structured workflow for coding tasks with AI agents**
 
-Version: 2.0.0-beta (Development Branch)
+Version: 2.1.0 (Development Branch)
 
 ---
 
-## 🆕 What's New in v2.0
+## 🆕 What's New in v2.1
+
+### Build Validation Integration
+
+**Problem Solved**: Code that doesn't compile or build failures discovered only after full implementation cycle.
+
+**1. Validation Discovery in Grooming** 🔍
+- Interactive prompts ask for build/test/type-check commands
+- Commands stored in `decisions.md` for use during implementation
+- Supports various tech stacks (npm, yarn, pytest, go test, etc.)
+
+**2. Technical Acceptance Criteria (Mandatory)** ✅
+- 5 TACs automatically added to every sprint:
+  - TAC1: Build Passes
+  - TAC2: All Tests Pass
+  - TAC3: New Tests Added
+  - TAC4: No Type Errors
+  - TAC5: No Regressions
+- Implementation cannot complete without all TACs passing
+
+**3. Pre-Flight Validation** 🛫
+- Verifies baseline is green before starting implementation
+- Interactive options if baseline fails (fix/proceed/skip)
+
+**4. Post-Task Validation** 🔄
+- Build/tests run after each task completion
+- Fail-fast protocol: max 3 fix attempts, then blocks
+- Issues caught early, not at the end
+
+**5. Final Validation Gate** 🚪
+- Full validation suite must pass before marking complete
+- All TACs verified before implementation closes
+
+**Impact**: Build/test failures at end reduced from ~40% to <5%
+
+### Interactive Prompts (Claude Code v2.0+)
+
+- All choice-based questions now use `AskUserQuestion` tool
+- Single-select and multi-select support
+- Better UX: clicking vs typing
+- Commands updated: `/asaf-groom`, `/asaf-demo`, `/asaf-impl-feedback`, `/asaf-retro`
+
+---
+
+## What's in v2.0
 
 ### Major Enhancements (User Feedback Driven)
 

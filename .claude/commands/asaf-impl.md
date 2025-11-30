@@ -73,6 +73,68 @@ Read:
    - **Reviewer Sub-Agent**: Exact agent name to invoke
    - **Reviewer Mode**: Mode to use during review
    - **Max Iterations**: Per-task limit
+   - **Validation Config**: Build command, test command, type check command
+
+---
+
+## Pre-Flight Validation (REQUIRED)
+
+**Before starting any task, verify the codebase baseline is healthy:**
+
+1. **Read validation commands** from `grooming/decisions.md`
+
+2. **Run pre-flight checks**:
+   ```
+   🔍 Running pre-flight validation...
+
+   Build:  [build_command]
+   Tests:  [test_command]
+   ```
+
+3. **Evaluate results**:
+
+   **If all pass** ✅:
+   ```
+   ✅ Pre-flight validation passed
+
+   Baseline is green:
+   - Build: ✅ Success
+   - Tests: ✅ [N] tests passing
+
+   Starting implementation...
+   ```
+   Proceed to Update State.
+
+   **If any fail** ❌:
+   ```
+   🔴 Pre-flight validation FAILED
+
+   Baseline is NOT green:
+   - Build: [✅/❌] [status]
+   - Tests: [✅/❌] [N] passing, [M] failing
+
+   [Error output if failed]
+   ```
+
+   **USE AskUserQuestion:**
+   ```yaml
+   AskUserQuestion:
+     questions:
+       - question: "Pre-flight validation failed. How should we proceed?"
+         header: "Action"
+         multiSelect: false
+         options:
+           - label: "Fix baseline first"
+             description: "I'll fix these issues before we start"
+           - label: "Proceed anyway"
+             description: "These failures are known/expected"
+           - label: "Skip validation"
+             description: "Don't run validation for this sprint"
+   ```
+
+   - **If "Fix baseline first"**: STOP and wait for user to fix
+   - **If "Proceed anyway"**: Document known failures and continue
+   - **If "Skip validation"**: Set `skip_validation: true` in state and continue
 
 ---
 
@@ -283,9 +345,55 @@ Move to next task.
 
 ---
 
+## Final Validation Gate (REQUIRED)
+
+**Before marking implementation complete, run final validation:**
+
+```
+🔍 Running final validation...
+
+Build:      [build_command]     [running...]
+Tests:      [test_command]      [running...]
+Type Check: [type_check]        [running...]
+```
+
+**Results:**
+```
+✅ Final Validation Results
+
+- Build:      ✅ Passed
+- Tests:      ✅ [N] passing, 0 failing
+- Type Check: ✅ No errors
+
+All Technical Acceptance Criteria met:
+- ✅ TAC1: Build Passes
+- ✅ TAC2: All Tests Pass
+- ✅ TAC3: New Tests Added ([N] new tests)
+- ✅ TAC4: No Type Errors
+- ✅ TAC5: No Regressions
+```
+
+**If any validation fails:**
+```
+🔴 Final Validation FAILED
+
+- Build:      [✅/❌]
+- Tests:      [✅/❌] [N] passing, [M] failing
+- Type Check: [✅/❌] [N] errors
+
+Failing checks:
+- [details]
+
+Cannot mark implementation complete until all validations pass.
+```
+
+Return to executor to fix the issues before completing.
+
+---
+
 ## Completion
 
-When all tasks complete:
+When all tasks complete AND final validation passes:
 
 ### Update State
 

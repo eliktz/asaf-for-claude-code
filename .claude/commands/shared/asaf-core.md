@@ -234,6 +234,114 @@ Continue with command execution using selected sprint.
 - Estimates complexity
 - Defines execution patterns
 
+## Interactive Question Patterns
+
+ASAF commands use the **AskUserQuestion tool** for structured user input. This provides better UX than text-based prompts.
+
+### When to Use Interactive Prompts
+
+| Question Type | Use Interactive? | Tool Feature |
+|---------------|------------------|--------------|
+| Yes/No/Partial | ✅ Always | Single select |
+| Multiple choice (2-4 options) | ✅ Always | Single select |
+| Multi-select (non-exclusive) | ✅ Always | multiSelect: true |
+| Rating scale | ✅ Always | Single select with ranges |
+| Open-ended exploration | ❌ Use text | N/A |
+| Follow-up clarification | ❌ Use text | N/A |
+
+### Standard Patterns
+
+**Pattern 1: Confirmation**
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "[Your question]?"
+      header: "Confirm"
+      multiSelect: false
+      options:
+        - label: "Yes"
+          description: "Proceed with this"
+        - label: "Partially"
+          description: "Some corrections needed"
+        - label: "No"
+          description: "Let me clarify"
+```
+
+**Pattern 2: Choice Selection**
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "Which [thing] should we use?"
+      header: "[Short label]"
+      multiSelect: false
+      options:
+        - label: "[Option A]"
+          description: "[Brief explanation]"
+        - label: "[Option B]"
+          description: "[Brief explanation]"
+        - label: "Other"
+          description: "I have a different preference"
+```
+
+**Pattern 3: Multi-Select**
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "Which [things] apply?"
+      header: "[Category]"
+      multiSelect: true
+      options:
+        - label: "[Option 1]"
+          description: "[Description]"
+        - label: "[Option 2]"
+          description: "[Description]"
+```
+
+**Pattern 4: Rating Scale**
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "How [metric] was this?"
+      header: "Rating"
+      multiSelect: false
+      options:
+        - label: "1-3 (Low)"
+          description: "[Low description]"
+        - label: "4-6 (Medium)"
+          description: "[Medium description]"
+        - label: "7-10 (High)"
+          description: "[High description]"
+```
+
+### Guidelines
+
+1. **Headers must be ≤12 characters** (displayed as chips/tags)
+2. **2-4 options per question** (too many overwhelms users)
+3. **Descriptions should be brief** (1 sentence max)
+4. **Always include "Other" for choices** (user can type custom answer)
+5. **Use multiSelect: true for non-exclusive choices**
+6. **Mix interactive with text questions** (don't make it feel like a form)
+
+### Example Flow
+
+```
+Claude: "Let me understand the problem. What are you trying to solve?"
+User: [types explanation]  ← Open-ended, use text
+
+Claude: [Uses AskUserQuestion]
+   "Is my understanding correct?"
+   Options: Yes / Partially / No
+User: [clicks "Yes"]  ← Closed-ended, use selection
+
+Claude: [Uses AskUserQuestion]
+   "Which authentication approach?"
+   Options: JWT / Sessions / Other
+User: [clicks "JWT"]  ← Multiple choice, use selection
+
+Claude: "Why do you prefer JWT over sessions?"
+User: [types explanation]  ← Open-ended, use text
+```
+
 ## Error Handling
 
 ### Severity Levels

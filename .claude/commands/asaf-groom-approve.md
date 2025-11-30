@@ -162,6 +162,55 @@ Options:
 
 ---
 
+**Validation Commands** (REQUIRED):
+```
+Read grooming/decisions.md
+Look for "Validation Configuration" or "Build Command" section
+
+Required fields:
+- Build command (or explicit "No build step")
+- Test command (or explicit "No tests yet")
+
+If not found:
+```
+🔴 ERROR: Validation commands not configured
+
+decisions.md must specify build and test commands for implementation.
+
+These commands will be run after each task to catch issues early.
+
+Options:
+  /asaf-groom-continue  - Configure validation commands
+  /asaf-groom-force     - Skip validation (not recommended)
+```
+
+---
+
+**Technical Acceptance Criteria** (REQUIRED):
+```
+Read grooming/acceptance-criteria.md
+Look for "Technical Acceptance Criteria" section
+
+Required TACs:
+- TAC1: Build Passes
+- TAC2: All Tests Pass
+
+If section missing or incomplete:
+```
+⚠️ WARNING: Technical Acceptance Criteria incomplete
+
+The Technical Acceptance Criteria section ensures implementation
+quality by verifying build/tests after each task.
+
+Missing:
+- [list missing TACs]
+
+Adding default Technical Acceptance Criteria...
+[Auto-generate the missing TACs based on decisions.md validation commands]
+```
+
+---
+
 **Executor Profile**:
 ```
 Read grooming/decisions.md

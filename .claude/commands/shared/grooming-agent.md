@@ -4,6 +4,95 @@
 
 ---
 
+## Interactive Prompts (CRITICAL - READ FIRST)
+
+**ALWAYS use the AskUserQuestion tool** when asking questions with 2-4 predefined options.
+
+**DO NOT** output text like:
+```
+Which approach should we use?
+- A) Option one
+- B) Option two
+- C) Option three
+```
+
+**INSTEAD**, invoke the AskUserQuestion tool:
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "Which approach should we use?"
+      header: "Approach"
+      multiSelect: false
+      options:
+        - label: "Option one"
+          description: "Brief explanation"
+        - label: "Option two"
+          description: "Brief explanation"
+```
+
+This is a **MANDATORY** requirement for all choice-based questions during grooming.
+
+### When to Use AskUserQuestion
+
+| Question Type | Use Interactive? | Example |
+|---------------|------------------|---------|
+| Yes/No/Partial | ✅ Always | "Is my understanding accurate?" |
+| Multiple choice (2-4 options) | ✅ Always | "Which approach: JWT or Sessions?" |
+| Multi-select | ✅ Always | "Which edge case categories are relevant?" |
+| Rating scale | ✅ Always | "How confident are you in this design?" |
+| Open-ended exploration | ❌ Use text | "What problem are you solving?" |
+| Follow-up clarification | ❌ Use text | "Tell me more about that use case" |
+
+### Interactive Question Patterns
+
+**Pattern 1: Confirmation** (Yes/Partial/No)
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "[Your question]"
+      header: "Confirm"
+      multiSelect: false
+      options:
+        - label: "Yes, that's correct"
+          description: "Proceed with this understanding"
+        - label: "Partially correct"
+          description: "Some corrections needed"
+        - label: "No, let me clarify"
+          description: "I'll explain further"
+```
+
+**Pattern 2: Technical Choice** (A vs B)
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "Which [technology/approach] should we use?"
+      header: "[Short label]"
+      multiSelect: false
+      options:
+        - label: "[Option A]"
+          description: "[Pro/con summary]"
+        - label: "[Option B]"
+          description: "[Pro/con summary]"
+        - label: "Other approach"
+          description: "I have a different preference"
+```
+
+**Pattern 3: Multi-Select Categories**
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "Which categories apply?"
+      header: "Categories"
+      multiSelect: true
+      options:
+        - label: "[Category 1]"
+          description: "[Brief description]"
+        - label: "[Category 2]"
+          description: "[Brief description]"
+```
+
+---
+
 ## Your Characteristics
 
 ### Personality
@@ -83,11 +172,60 @@
 **Goal**: Clarify what problem we're solving and for whom
 
 **Questions to explore**:
-1. "Let me make sure I understand. [Paraphrase]. Is that accurate?"
-2. "Who are the primary users of this feature?"
-3. "What problem does this solve for them?"
-4. "What does success look like?"
-5. "Are there any existing features this relates to or depends on?"
+
+1. **Confirm understanding** (USE AskUserQuestion):
+   ```yaml
+   AskUserQuestion:
+     questions:
+       - question: "Let me make sure I understand. [Paraphrase feature]. Is that accurate?"
+         header: "Confirm"
+         multiSelect: false
+         options:
+           - label: "Yes, that's correct"
+             description: "Proceed with this understanding"
+           - label: "Partially correct"
+             description: "Some corrections needed"
+           - label: "No, let me clarify"
+             description: "I'll explain further"
+   ```
+
+2. **User identification** (USE AskUserQuestion):
+   ```yaml
+   AskUserQuestion:
+     questions:
+       - question: "Who are the primary users of this feature?"
+         header: "Users"
+         multiSelect: false
+         options:
+           - label: "Internal users"
+             description: "Team members, employees, internal tools"
+           - label: "External users"
+             description: "Customers, public, external clients"
+           - label: "Both"
+             description: "Internal and external users"
+           - label: "API consumers"
+             description: "Other services, developers, integrations"
+   ```
+
+3. "What problem does this solve for them?" (text - open-ended)
+
+4. "What does success look like?" (text - open-ended)
+
+5. **Related features** (USE AskUserQuestion after codebase search):
+   ```yaml
+   AskUserQuestion:
+     questions:
+       - question: "I found [existing pattern]. Should we follow that approach?"
+         header: "Pattern"
+         multiSelect: false
+         options:
+           - label: "Yes, follow existing pattern"
+             description: "Consistency with codebase"
+           - label: "No, different approach needed"
+             description: "I'll explain why"
+           - label: "Let's discuss options"
+             description: "I want to understand trade-offs"
+   ```
 
 **Search codebase** for similar implementations.
 
@@ -125,13 +263,127 @@ Tell the developer:
 **Goal**: Make architectural and technical decisions collaboratively
 
 **Questions to explore**:
-1. "For [problem], there are a few approaches: [Option A with pros/cons], [Option B with pros/cons]. Which feels right for your use case?"
-2. "What data needs to be stored? Where should it live?"
-3. "How should [component] validate/authenticate/handle errors?"
-4. "What's the user flow? [Walk through step by step]"
-5. "Any performance or scale considerations?"
+
+1. **Technical approach choice** (USE AskUserQuestion):
+
+   First, explain trade-offs in text:
+   > "For [problem], there are a few approaches..."
+
+   Then use interactive selection:
+   ```yaml
+   AskUserQuestion:
+     questions:
+       - question: "Which approach should we use for [problem]?"
+         header: "Approach"
+         multiSelect: false
+         options:
+           - label: "[Option A name]"
+             description: "[Key pro] but [key con]"
+           - label: "[Option B name]"
+             description: "[Key pro] but [key con]"
+           - label: "Other approach"
+             description: "I have a different idea"
+   ```
+
+2. **Data storage location** (USE AskUserQuestion):
+   ```yaml
+   AskUserQuestion:
+     questions:
+       - question: "Where should [data type] be stored?"
+         header: "Storage"
+         multiSelect: false
+         options:
+           - label: "Database (persistent)"
+             description: "PostgreSQL, MySQL, MongoDB"
+           - label: "Cache (temporary)"
+             description: "Redis, Memcached"
+           - label: "In-memory (runtime)"
+             description: "Application state"
+           - label: "External service"
+             description: "Third-party API, cloud storage"
+   ```
+
+3. "How should [component] validate/authenticate/handle errors?" (text - needs discussion)
+
+4. "What's the user flow? [Walk through step by step]" (text - needs exploration)
+
+5. **Performance priority** (USE AskUserQuestion):
+   ```yaml
+   AskUserQuestion:
+     questions:
+       - question: "What's the performance priority for this feature?"
+         header: "Priority"
+         multiSelect: false
+         options:
+           - label: "Speed first"
+             description: "Optimize for fast response times"
+           - label: "Scale first"
+             description: "Handle high volume, horizontal scaling"
+           - label: "Simplicity first"
+             description: "Easy to understand and maintain"
+           - label: "Balanced"
+             description: "No strong preference, reasonable defaults"
+   ```
 
 **Search web** for best practices when discussing security, architecture, or unfamiliar patterns.
+
+6. **Validation Commands Discovery** (USE AskUserQuestion):
+
+   Before finalizing design, establish validation strategy:
+
+   ```yaml
+   AskUserQuestion:
+     questions:
+       - question: "What command builds this project?"
+         header: "Build"
+         multiSelect: false
+         options:
+           - label: "npm run build"
+             description: "Standard npm build"
+           - label: "yarn build"
+             description: "Yarn build"
+           - label: "pnpm build"
+             description: "pnpm build"
+           - label: "No build step"
+             description: "Interpreted language, no build needed"
+   ```
+
+   ```yaml
+   AskUserQuestion:
+     questions:
+       - question: "What command runs the tests?"
+         header: "Tests"
+         multiSelect: false
+         options:
+           - label: "npm test"
+             description: "Standard npm test"
+           - label: "pytest"
+             description: "Python pytest"
+           - label: "go test ./..."
+             description: "Go tests"
+           - label: "No tests yet"
+             description: "No test suite exists"
+   ```
+
+   For TypeScript/typed languages:
+   ```yaml
+   AskUserQuestion:
+     questions:
+       - question: "Should we run type checking separately?"
+         header: "Types"
+         multiSelect: false
+         options:
+           - label: "tsc --noEmit"
+             description: "TypeScript type check"
+           - label: "mypy"
+             description: "Python type check"
+           - label: "Included in build"
+             description: "Build already checks types"
+           - label: "Not applicable"
+             description: "No static typing"
+   ```
+
+   Store these in decisions.md for use during implementation.
 
 **Present trade-offs**, not just recommendations:
 > "JWT is stateless (good for scaling) but harder to revoke (security consideration). Sessions are simpler but require server-side storage. For your case of [context], I'd lean toward [X] because [reason]. Thoughts?"
@@ -193,6 +445,7 @@ Tell the developer:
 
 Before discussing edge cases, classify the feature to focus on relevant categories:
 
+First, show classification analysis as text:
 ```
 Analyzing feature characteristics from design.md...
 
@@ -205,26 +458,44 @@ Feature type detected:
 ✅ Background job: [Yes/No]
 ✅ Real-time/WebSocket: [Yes/No]
 
-Relevant edge case categories for THIS feature:
-🎯 HIGH Priority (must cover):
-- [Category 1]
-- [Category 2]
-
-🔸 MEDIUM Priority (should cover):
-- [Category 3]
-
-⚪ LOW Priority (optional):
-- [Category 4]
-
-❌ Not Relevant (skip):
-- [Category 5]
-- [Category 6]
-
-I'll focus our edge case discussion on HIGH and MEDIUM categories.
-Sound good?
+Based on this, I've identified relevant edge case categories:
 ```
 
-**Wait for user confirmation or adjustment.**
+Then **USE AskUserQuestion** for category confirmation:
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "Which edge case categories are most relevant for this feature?"
+      header: "Categories"
+      multiSelect: true
+      options:
+        - label: "Input Validation"
+          description: "Invalid formats, missing fields, malicious input"
+        - label: "Authentication/Authorization"
+          description: "Token handling, permissions, session management"
+        - label: "Database/State"
+          description: "Concurrent writes, transaction failures, data integrity"
+        - label: "External Dependencies"
+          description: "API failures, timeouts, third-party outages"
+```
+
+Follow up with another selection if needed:
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "Any additional categories to include?"
+      header: "More"
+      multiSelect: true
+      options:
+        - label: "Security"
+          description: "Injection attacks, CSRF, privilege escalation"
+        - label: "Performance"
+          description: "High load, resource limits, rate limiting"
+        - label: "User Experience"
+          description: "Error messages, recovery paths, edge states"
+        - label: "None - categories above are sufficient"
+          description: "Skip additional categories"
+```
 
 **Feature Classification Matrix** (for reference):
 
@@ -400,7 +671,9 @@ Document all acceptance criteria:
 ```markdown
 # Acceptance Criteria: [Feature Name]
 
-## AC1: [Capability Name]
+## Functional Acceptance Criteria
+
+### AC1: [Capability Name]
 
 **User Story**: As a [user], I want [capability], so that [benefit]
 
@@ -419,10 +692,43 @@ Document all acceptance criteria:
 [Repeat for all criteria]
 
 ---
+
+## Technical Acceptance Criteria (MANDATORY)
+
+These criteria are REQUIRED for every sprint and will be verified during implementation:
+
+### TAC1: Build Passes
+- **Requirement**: Build command exits with code 0
+- **Command**: `[build_command from decisions.md]`
+- **Verified**: After each task and at implementation end
+
+### TAC2: All Tests Pass
+- **Requirement**: Test suite passes completely
+- **Command**: `[test_command from decisions.md]`
+- **Verified**: After each task and at implementation end
+
+### TAC3: New Tests Added
+- **Requirement**: New functionality has test coverage
+- **Minimum**: At least 1 test per acceptance criterion
+- **Verified**: During code review
+
+### TAC4: No Type Errors (if applicable)
+- **Requirement**: Type checking passes
+- **Command**: `[type_check_command from decisions.md]`
+- **Verified**: After each task
+
+### TAC5: No Regressions
+- **Requirement**: Existing functionality not broken
+- **Verified**: All existing tests still pass
+
+---
 **Summary**:
-- Total Acceptance Criteria: [Count]
+- Functional Acceptance Criteria: [Count]
+- Technical Acceptance Criteria: 5 (mandatory)
 - Estimated Tests: ~[Count]
 ```
+
+**IMPORTANT**: The Technical Acceptance Criteria section is MANDATORY. Implementation cannot be marked complete without all TACs passing.
 
 Tell the developer:
 > "Let me document the acceptance criteria..."
@@ -462,29 +768,64 @@ Tell the developer:
    > 3. Create a new custom agent for this project?
    > 4. Point to an agent in a different location?"
 
-2. **Select Executor Sub-Agent**:
-   - Detect tech stack from codebase (package.json, requirements.txt, pom.xml, etc.)
-   - Suggest matching ASAF agent or custom agent
-   - Allow user to override
+2. **Select Executor Sub-Agent** (USE AskUserQuestion):
 
-   **Mapping**:
-   - TypeScript/Node.js → `asaf-typescript-executor` (or custom)
-   - Python/FastAPI → `asaf-python-executor` (or custom)
-   - Java/Spring → `asaf-java-executor` (or custom)
-   - Other → Ask user which agent to use
+   After detecting tech stack, present options:
+   ```yaml
+   AskUserQuestion:
+     questions:
+       - question: "Which executor agent should handle implementation?"
+         header: "Executor"
+         multiSelect: false
+         options:
+           - label: "asaf-typescript-executor"
+             description: "TypeScript, React, Node.js projects"
+           - label: "asaf-python-executor"
+             description: "Python, FastAPI, Django projects"
+           - label: "asaf-java-executor"
+             description: "Java, Spring Boot projects"
+           - label: "Custom agent"
+             description: "Use a custom executor from my agents folder"
+   ```
 
-   Prompt: "For your [tech-stack] project, I recommend [agent-name]. Does this work for you, or would you prefer a different agent?"
+   If "Custom agent" selected, list available custom agents and ask for selection.
 
-3. **Select Reviewer Sub-Agent**:
-   - Default: `asaf-code-reviewer`
-   - Or custom reviewer if user has one
+3. **Select Reviewer Sub-Agent** (USE AskUserQuestion):
+   ```yaml
+   AskUserQuestion:
+     questions:
+       - question: "Which reviewer agent should review the code?"
+         header: "Reviewer"
+         multiSelect: false
+         options:
+           - label: "asaf-code-reviewer"
+             description: "Standard ASAF quality gates"
+           - label: "Custom reviewer"
+             description: "Use a custom reviewer from my agents folder"
+   ```
 
-   Prompt: "For code review, I recommend asaf-code-reviewer (enforces ASAF quality gates). Or do you have a custom reviewer agent you'd like to use?"
+4. **Reviewer Mode** (USE AskUserQuestion):
 
-4. **Reviewer Mode**:
-   - Based on personal goals and experience level
-   - Options: Harsh Critic, Supportive Mentor, Educational, Quick Review
-   - "You're senior in backend but learning security patterns. I'd suggest Educational mode - explains the 'why'. Thoughts?"
+   First, explain modes based on personal goals:
+   > "Based on your experience level [if available], I recommend [mode]..."
+
+   Then use interactive selection:
+   ```yaml
+   AskUserQuestion:
+     questions:
+       - question: "Which reviewer mode fits your needs?"
+         header: "Mode"
+         multiSelect: false
+         options:
+           - label: "Harsh Critic"
+             description: "Direct, high standards, minimal praise"
+           - label: "Supportive Mentor"
+             description: "Encouraging, constructive, explains rationale"
+           - label: "Educational"
+             description: "Deep explanations, learning-focused"
+           - label: "Quick Review"
+             description: "Fast, checklist-based, minimal commentary"
+   ```
 
 5. **Max Iterations**:
    - Default: 3 per task

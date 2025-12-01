@@ -8,6 +8,37 @@
 
 ---
 
+## CRITICAL: Interactive Prompts Requirement
+
+**For ALL yes/no questions and ALL multiple-choice questions during this grooming session, you MUST use the AskUserQuestion tool.**
+
+Example - when asking "Do these cover the key requirements?":
+
+**WRONG** (do not do this):
+```
+Do these cover the key requirements?
+```
+
+**CORRECT** (always do this):
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "Do these acceptance criteria cover the key requirements?"
+      header: "Confirm"
+      multiSelect: false
+      options:
+        - label: "Yes, looks good"
+          description: "Proceed to next phase"
+        - label: "Partially"
+          description: "Some adjustments needed"
+        - label: "No, needs rework"
+          description: "I'll explain what's missing"
+```
+
+**This applies to EVERY question with predefined answer options throughout the entire grooming session.**
+
+---
+
 ## Step 0: Verify Active Sprint
 
 1. Check if /asaf/.current-sprint.json exists
@@ -114,8 +145,9 @@ This persona includes:
 
 ## Select Grooming Mode
 
-Before starting, determine the appropriate grooming depth:
+Before starting, determine the appropriate grooming depth.
 
+**First, show context** (as text output):
 ```
 👋 Let's groom the "[sprint-name]" feature together.
 
@@ -129,59 +161,54 @@ I also see you're working on:
 
 [If codebase context relevant]
 I noticed your project uses [detected stack] with [key patterns].
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Before we start, let's match grooming depth to your task complexity.
-
-How complex is this feature? (Estimate in story points if you can)
-
-1. 🟢 Simple (1-2 story points)
-   - Clear requirements, straightforward implementation
-   - Examples: Add validation rule, simple UI change, config update
-   → **Quick Grooming** (5-10 minutes)
-   → Minimum 3-5 edge cases, 2-3 acceptance criteria
-
-2. 🟡 Medium (4-8 story points)
-   - Some design decisions, multiple components involved
-   - Examples: New API endpoint, multi-step workflow, integration
-   → **Standard Grooming** (20-30 minutes)
-   → Minimum 8-10 edge cases, 5 acceptance criteria
-
-3. 🔴 Complex (8+ story points)
-   - Significant design work, many unknowns, architecture impact
-   - Examples: Authentication system, major refactor, new subsystem
-   → **Deep Grooming** (40-60 minutes)
-   → Minimum 15+ edge cases, 8+ acceptance criteria
-
-Enter your choice [1-3]:
 ```
 
-**Wait for user selection.**
+**Then, USE the AskUserQuestion tool** to ask about complexity:
 
-**Store the selected mode** for use throughout the conversation:
-- `grooming_mode = "quick" | "standard" | "deep"`
-- `min_edge_cases = 3 | 8 | 15`
-- `min_acceptance_criteria = 2 | 5 | 8`
-- `estimated_duration = "5-10 min" | "20-30 min" | "40-60 min"`
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "How complex is this feature? (Estimate in story points)"
+      header: "Complexity"
+      multiSelect: false
+      options:
+        - label: "🟢 Simple (1-2 points)"
+          description: "Clear requirements, straightforward → Quick Grooming (5-10 min)"
+        - label: "🟡 Medium (4-8 points)"
+          description: "Design decisions, multiple components → Standard (20-30 min)"
+        - label: "🔴 Complex (8+ points)"
+          description: "Significant design, many unknowns → Deep (40-60 min)"
+```
+
+**Map response to mode**:
+- "Simple" → `grooming_mode = "quick"`, `min_edge_cases = 3`, `min_ac = 2`
+- "Medium" → `grooming_mode = "standard"`, `min_edge_cases = 8`, `min_ac = 5`
+- "Complex" → `grooming_mode = "deep"`, `min_edge_cases = 15`, `min_ac = 8`
 
 **Validate selection against complexity signals**:
 
 If user chooses "quick" but initial.md has > 100 words or mentions complex patterns:
-```
-⚠️ Note: Your feature description suggests some complexity.
-   Quick grooming works best for very simple, well-defined tasks.
 
-   Are you sure you want Quick mode?
-   - Yes, keep Quick (I know exactly what to build)
-   - No, switch to Standard (safer choice)
+**USE the AskUserQuestion tool** for validation:
+
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "Your feature description suggests complexity. Quick mode works best for simple tasks. Keep Quick mode?"
+      header: "Confirm"
+      multiSelect: false
+      options:
+        - label: "Yes, keep Quick"
+          description: "I know exactly what to build"
+        - label: "Switch to Standard"
+          description: "Safer choice for this complexity"
 ```
 
 ---
 
 ## Opening Message (After Mode Selection)
 
-Show the user:
+**Show the mode confirmation** (as text output):
 
 ```
 ✅ [Mode Selected]: [Quick/Standard/Deep] Grooming
@@ -203,11 +230,24 @@ We'll cover:
 3. Edge cases (what could go wrong) [depth varies by mode]
 4. Acceptance criteria (how to verify) [depth varies by mode]
 5. Execution planning (agents & review style)
-
-Ready to begin?
 ```
 
-Wait for user confirmation before proceeding.
+**USE the AskUserQuestion tool** for confirmation:
+
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "Ready to begin the grooming session?"
+      header: "Start"
+      multiSelect: false
+      options:
+        - label: "Yes, let's start"
+          description: "Begin the grooming conversation"
+        - label: "Wait, I have questions first"
+          description: "I want to clarify something before we start"
+```
+
+If user selects "Wait, I have questions first" - address their questions before proceeding.
 
 ---
 

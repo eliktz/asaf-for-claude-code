@@ -92,11 +92,22 @@ Your learning goals for this sprint:
 
 This retrospective will take about 10-15 minutes.
 We'll discuss what went well, what to improve, and what you learned.
-
-Ready to begin?
 ```
 
-Wait for confirmation.
+**USE the AskUserQuestion tool** for confirmation:
+
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "Ready to begin the retrospective?"
+      header: "Start"
+      multiSelect: false
+      options:
+        - label: "Yes, let's start"
+          description: "Begin the retrospective conversation"
+        - label: "Wait, let me prepare"
+          description: "I need a moment before we start"
+```
 
 ---
 
@@ -104,12 +115,61 @@ Wait for confirmation.
 
 **Questions to explore**:
 
-1. "How did this sprint feel overall? On a scale of 1-10, how would you rate the experience?"
+1. **Sprint rating** (USE AskUserQuestion):
+   ```yaml
+   AskUserQuestion:
+     questions:
+       - question: "How did this sprint feel overall?"
+         header: "Rating"
+         multiSelect: false
+         options:
+           - label: "1-3 (Difficult)"
+             description: "Many challenges, frustrating experience"
+           - label: "4-5 (Mixed)"
+             description: "Some good, some difficult"
+           - label: "6-7 (Good)"
+             description: "Generally positive experience"
+           - label: "8-10 (Excellent)"
+             description: "Smooth, productive, enjoyable"
+   ```
 
-2. "What stands out to you most about this sprint?"
+2. "What stands out to you most about this sprint?" (text - open-ended)
 
-3. [If rating is low] "What made it challenging?"
-   [If rating is high] "What made it work well?"
+3. [If rating is low (1-5)]:
+   ```yaml
+   AskUserQuestion:
+     questions:
+       - question: "What made this sprint challenging?"
+         header: "Challenges"
+         multiSelect: true
+         options:
+           - label: "Unclear requirements"
+             description: "Didn't fully understand what to build"
+           - label: "Technical complexity"
+             description: "Hard implementation problems"
+           - label: "Too many iterations"
+             description: "Code review cycles were frustrating"
+           - label: "Other challenges"
+             description: "Something else not listed"
+   ```
+
+   [If rating is high (6-10)]:
+   ```yaml
+   AskUserQuestion:
+     questions:
+       - question: "What made this sprint work well?"
+         header: "Successes"
+         multiSelect: true
+         options:
+           - label: "Clear requirements"
+             description: "Knew exactly what to build"
+           - label: "Good design"
+             description: "Grooming prepared us well"
+           - label: "Smooth implementation"
+             description: "Few blockers or rework"
+           - label: "Other factors"
+             description: "Something else not listed"
+   ```
 
 ---
 
@@ -117,15 +177,27 @@ Wait for confirmation.
 
 **Questions to explore**:
 
-1. "What are you most proud of from this sprint?"
+1. "What are you most proud of from this sprint?" (text - open-ended)
 
-2. "Which part of the process was most valuable?"
-   - Grooming conversation?
-   - Implementation automation?
-   - Code review cycles?
-   - Something else?
+2. **Process value** (USE AskUserQuestion):
+   ```yaml
+   AskUserQuestion:
+     questions:
+       - question: "Which part of the ASAF process was most valuable?"
+         header: "Value"
+         multiSelect: false
+         options:
+           - label: "Grooming conversation"
+             description: "Design exploration and decisions"
+           - label: "Implementation automation"
+             description: "Executor + reviewer loop"
+           - label: "Code review cycles"
+             description: "Quality feedback and iteration"
+           - label: "Something else"
+             description: "A different aspect was most valuable"
+   ```
 
-3. "Were there any 'aha moments' or breakthroughs?"
+3. "Were there any 'aha moments' or breakthroughs?" (text - open-ended)
 
 4. [If tasks completed quickly] "Task [X] went perfectly on first try. What made that work well?"
 
@@ -182,16 +254,51 @@ Wait for confirmation.
 
 **Review progress on goals**:
 
-1. [For each goal] "Your goal was '[goal]'. How much progress did you make?"
-   - Achieved (ready to move on)
-   - In Progress (made progress, need more)
-   - No Progress (didn't focus on this)
+1. **Goal progress** (USE AskUserQuestion for each goal):
+   ```yaml
+   AskUserQuestion:
+     questions:
+       - question: "Your goal was '[goal]'. How much progress did you make?"
+         header: "Progress"
+         multiSelect: false
+         options:
+           - label: "Achieved"
+             description: "Ready to move on to next level"
+           - label: "In Progress"
+             description: "Made progress, need more practice"
+           - label: "No Progress"
+             description: "Didn't focus on this goal"
+   ```
 
-2. "Do you want to add any new learning goals based on this experience?"
+2. **New goals** (USE AskUserQuestion):
+   ```yaml
+   AskUserQuestion:
+     questions:
+       - question: "Add new learning goals based on this experience?"
+         header: "New Goals"
+         multiSelect: false
+         options:
+           - label: "Yes, I have ideas"
+             description: "I'll describe my new goals"
+           - label: "No, current goals are good"
+             description: "Keep existing goals for now"
+   ```
 
-3. "Should we update your reviewer preferences?"
-   - If learned a lot: Maybe want more challenge (Harsh Critic)
-   - If struggled: Maybe want more support (Educational)
+3. **Reviewer preference** (USE AskUserQuestion):
+   ```yaml
+   AskUserQuestion:
+     questions:
+       - question: "Should we update your reviewer preferences?"
+         header: "Reviewer"
+         multiSelect: false
+         options:
+           - label: "More challenge (Harsh Critic)"
+             description: "I'm ready for harder feedback"
+           - label: "Keep current mode"
+             description: "Current feedback level is good"
+           - label: "More support (Educational)"
+             description: "I need more detailed explanations"
+   ```
 
 **Prepare personal goal updates**
 

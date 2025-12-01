@@ -79,24 +79,31 @@ Let's customize your demo...
 
 ### Prompt 1: Presentation Length
 
+**USE the AskUserQuestion tool**:
+
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "How long should the presentation be?"
+      header: "Length"
+      multiSelect: false
+      options:
+        - label: "Quick (5 min)"
+          description: "Brief overview, key highlights only"
+        - label: "Standard (15 min)"
+          description: "Balanced coverage, recommended"
+        - label: "Extended (30 min)"
+          description: "Comprehensive deep dive"
+        - label: "Workshop (45 min)"
+          description: "Full details with discussion time"
 ```
-📏 How long should the presentation be?
 
-1. Quick (5 minutes)    - Brief overview, key highlights only
-2. Standard (15 minutes) - Balanced coverage, recommended
-3. Extended (30 minutes) - Comprehensive deep dive
-4. Workshop (45 minutes) - Full details with discussion time
-5. Custom length        - Enter minutes (1-120)
-
-Choose [1-5]:
-```
-
-**Input Validation**:
-- Accept: 1, 2, 3, 4, 5
-- If 5: Prompt "Enter minutes (1-120):"
-  - Validate: 1 ≤ minutes ≤ 120
-  - If invalid: Re-prompt (max 3 attempts, then default to 15)
-- Store as: `presentation_length_minutes`
+**Map response**:
+- "Quick" → `presentation_length_minutes = 5`
+- "Standard" → `presentation_length_minutes = 15`
+- "Extended" → `presentation_length_minutes = 30`
+- "Workshop" → `presentation_length_minutes = 45`
+- If user selects "Other" → Prompt for custom minutes (1-120)
 
 **Edge Case #1**: Out of range custom length
 - If < 1 or > 120: Clamp to range and warn
@@ -106,24 +113,34 @@ Choose [1-5]:
 
 ### Prompt 2: Target Audience
 
+**USE the AskUserQuestion tool**:
+
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "Who is the primary audience?"
+      header: "Audience"
+      multiSelect: false
+      options:
+        - label: "Technical Team"
+          description: "Engineers, architects (high technical depth)"
+        - label: "Product Team"
+          description: "PMs, designers (balanced business + tech)"
+        - label: "Executive"
+          description: "Leadership, stakeholders (business focus)"
+        - label: "Customer"
+          description: "External users (benefits only, no internals)"
 ```
-👥 Who is the primary audience?
 
-1. Technical Team      - Engineers, architects (high technical depth)
-2. Product Team        - PMs, designers (balanced business + tech)
-3. Executive          - Leadership, stakeholders (business focus)
-4. Customer           - External users (benefits only, no internals)
-
-Choose [1-4]:
-```
-
-**Input Validation**:
-- Accept: 1, 2, 3, 4
-- Map to: technical-team, product-team, executive, customer
-- Store as: `audience_type`
+**Map response**:
+- "Technical Team" → `audience_type = "technical-team"`
+- "Product Team" → `audience_type = "product-team"`
+- "Executive" → `audience_type = "executive"`
+- "Customer" → `audience_type = "customer"`
 
 **Edge Case #2**: Express sprint detection
 - If `.state.json` shows `type: "express"`:
+  - Skip this prompt
   - Auto-select: technical-team (most likely)
   - Auto-simplify to 5 minutes
   - Show: "🔄 Express sprint detected - auto-selecting 5-min technical demo"
@@ -132,40 +149,54 @@ Choose [1-4]:
 
 ### Prompt 3: Output Format
 
+**USE the AskUserQuestion tool**:
+
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "Which output format do you prefer?"
+      header: "Format"
+      multiSelect: false
+      options:
+        - label: "Markdown Slides"
+          description: "Ready for Marp/Slidev/reveal.js (recommended)"
+        - label: "Outline"
+          description: "Bulleted presentation outline"
+        - label: "Script"
+          description: "Full presenter script with notes"
 ```
-📄 Output format?
 
-1. Markdown Slides (recommended) - Ready for Marp/Slidev/reveal.js
-2. Outline                      - Bulleted presentation outline
-3. Script                       - Full presenter script with notes
-
-Choose [1-3] (default: 1):
-```
-
-**Input Validation**:
-- Accept: 1, 2, 3, or Enter (default to 1)
-- Map to: markdown-slides, outline, script
-- Store as: `output_format`
+**Map response**:
+- "Markdown Slides" → `output_format = "markdown-slides"`
+- "Outline" → `output_format = "outline"`
+- "Script" → `output_format = "script"`
 
 ---
 
 ### Prompt 4: Include Diagrams
 
+**USE the AskUserQuestion tool**:
+
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "Include Mermaid diagrams (architecture, flows, timeline)?"
+      header: "Diagrams"
+      multiSelect: false
+      options:
+        - label: "Yes, include diagrams"
+          description: "Architecture, user flows, timeline charts"
+        - label: "No, skip diagrams"
+          description: "Text-only presentation"
 ```
-📊 Include diagrams?
 
-Mermaid diagrams can show:
-  • Architecture overview
-  • User/data flows
-  • Timeline (Gantt chart)
+**Map response**:
+- "Yes" → `include_diagrams = true`
+- "No" → `include_diagrams = false`
 
-Include diagrams? [Y/n] (default: Y for technical, N for executive):
-```
-
-**Input Validation**:
-- Accept: Y, y, N, n, Enter
-- Default: Y if audience is technical/product, N if executive/customer
-- Store as: `include_diagrams` (boolean)
+**Context-aware defaults**:
+- If audience is technical/product: Pre-select "Yes"
+- If audience is executive/customer: Pre-select "No"
 
 **Edge Case #8**: No diagrams possible
 - If design.md has no architecture/flow content:
@@ -176,30 +207,46 @@ Include diagrams? [Y/n] (default: Y for technical, N for executive):
 
 ### Prompt 5: Enhancement Selection
 
+**USE the AskUserQuestion tool** with **multiSelect: true**:
+
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "Which optional enhancements should we include?"
+      header: "Enhancements"
+      multiSelect: true
+      options:
+        - label: "Code examples"
+          description: "Key implementation snippets"
+        - label: "Metrics"
+          description: "Test coverage, performance data"
+        - label: "Timeline"
+          description: "Development timeline (Gantt chart)"
+        - label: "Risks"
+          description: "Edge cases and mitigations"
 ```
-✨ Add optional enhancements? (multi-select)
 
-Available enhancements:
-  [1] Code examples       - Key implementation snippets
-  [2] Metrics             - Test coverage, performance data
-  [3] Timeline            - Development timeline (Gantt)
-  [4] Risks               - Edge cases and mitigations
-  [5] Next steps          - Future work and roadmap
-
-Enter numbers separated by commas (e.g., "1,2,5")
-Or press Enter to skip enhancements:
+Follow up with:
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "Any additional enhancements?"
+      header: "More"
+      multiSelect: true
+      options:
+        - label: "Next steps"
+          description: "Future work and roadmap"
+        - label: "None - enhancements above are sufficient"
+          description: "Skip additional enhancements"
 ```
 
-**Input Validation**:
-- Accept: Comma-separated numbers 1-5, or Enter for none
-- Parse to list: `["code", "metrics", "timeline", "risks", "next-steps"]`
-- Store as: `enhancements` (array)
+**Map responses** to: `enhancements = ["code", "metrics", "timeline", "risks", "next-steps"]`
 
-**Context-Aware Defaults**:
-- Technical audience: Suggest "1,2,4" (code, metrics, risks)
-- Executive audience: Suggest "3,5" (timeline, next-steps)
-- Product audience: Suggest "2,4,5" (metrics, risks, next-steps)
-- Customer audience: Skip entirely (no internal details)
+**Context-Aware Defaults** (suggest as pre-selected):
+- Technical audience: code, metrics, risks
+- Executive audience: timeline, next-steps
+- Product audience: metrics, risks, next-steps
+- Customer audience: Skip prompt entirely (no internal details)
 
 ---
 

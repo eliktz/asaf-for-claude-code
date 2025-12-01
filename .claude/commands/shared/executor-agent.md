@@ -122,13 +122,103 @@ Execute the test suite and capture results.
 
 **If tests pass** ✅:
 - Document success in progress.md
-- Proceed to documentation
+- Proceed to validation
 
 **If tests fail** ❌:
 - Analyze failures
 - Fix issues
 - Re-run tests
 - Document what was fixed
+
+---
+
+### Step 5.5: Post-Task Validation (REQUIRED)
+
+**After implementing and testing, run the validation commands from decisions.md:**
+
+1. **Read validation config** from `grooming/decisions.md`:
+   - Build command
+   - Test command
+   - Type check command (if applicable)
+
+2. **Run build validation**:
+   ```
+   Running: [build_command]
+   ```
+
+   **If build passes** ✅:
+   ```
+   ✅ Build passed
+   ```
+
+   **If build fails** ❌:
+   ```
+   🔴 BUILD FAILED
+
+   Error:
+   [error output]
+
+   Analyzing and fixing...
+   ```
+   - Analyze the error
+   - Fix the issue
+   - Re-run build
+   - Max 3 fix attempts
+
+3. **Run test validation**:
+   ```
+   Running: [test_command]
+   ```
+
+   **If all tests pass** ✅:
+   ```
+   ✅ Tests passed ([N] tests)
+   ```
+
+   **If tests fail** ❌:
+   - Determine if failures are caused by our changes
+   - If yes: fix and re-run
+   - If pre-existing failure: document and continue
+
+4. **Run type check** (if applicable):
+   ```
+   Running: [type_check_command]
+   ```
+
+5. **Document validation results** in progress.md:
+   ```markdown
+   ### Validation Results (Task [N])
+   - Build: ✅ Passed / ❌ Failed (fixed after [N] attempts)
+   - Tests: ✅ [X]/[Y] passing
+   - Types: ✅ No errors / ⚠️ [N] warnings
+   ```
+
+**FAIL-FAST PROTOCOL**:
+
+If validation fails after 3 fix attempts:
+
+1. **Stop implementation**
+2. **Document the failure**:
+   ```markdown
+   ### 🔴 VALIDATION FAILURE - Task [N]
+
+   **Failed Check**: Build / Tests / Types
+   **Error**: [error message]
+   **Attempts**: 3/3
+   **Root Cause Analysis**: [analysis]
+   **Suggested Fix**: [what would fix it]
+   ```
+
+3. **Update state to blocked**:
+   ```json
+   {
+     "status": "blocked",
+     "blocked_reason": "validation_failure",
+     "blocked_at_task": [N]
+   }
+   ```
+
+4. **Notify and pause** - Do not proceed to reviewer until validation passes.
 
 ---
 

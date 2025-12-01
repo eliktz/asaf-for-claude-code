@@ -74,6 +74,7 @@ Continue with feedback now? (y/n)
 
 ## Opening Message
 
+Show context as text:
 ```
 📝 Post-Implementation Feedback
 
@@ -86,22 +87,29 @@ I'll help you:
 4. Update documentation
 
 This ensures feedback changes maintain the same quality as /asaf-impl.
-
-How would you like to provide feedback?
-
-1. Interactive Review - I'll walk you through each task
-   (Systematic, good for thorough review)
-
-2. Bulk Feedback - You provide all feedback now
-   (Fast, good if you've already reviewed)
-
-3. Specific Changes - You have exact changes to make
-   (Fastest, for expert users)
-
-Enter choice [1-3]:
 ```
 
-Wait for user selection.
+**USE the AskUserQuestion tool** for mode selection:
+
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "How would you like to provide feedback?"
+      header: "Mode"
+      multiSelect: false
+      options:
+        - label: "Interactive Review"
+          description: "I'll walk through each task (systematic, thorough)"
+        - label: "Bulk Feedback"
+          description: "You provide all feedback now (fast, if already reviewed)"
+        - label: "Specific Changes"
+          description: "You have exact changes to make (fastest, expert users)"
+```
+
+**Map response**:
+- "Interactive Review" → Mode 1
+- "Bulk Feedback" → Mode 2
+- "Specific Changes" → Mode 3
 
 ---
 
@@ -233,28 +241,41 @@ Total: [N] enhancements
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Total feedback items: [N]
-
-Which items should I address?
-
-1. Fix all (bugs + improvements + enhancements)
-2. Fix bugs and improvements only (skip enhancements)
-3. Fix bugs only (critical issues)
-4. Custom selection (I'll choose specific items)
-
-Enter choice [1-4]:
 ```
 
-Wait for user selection.
+**USE the AskUserQuestion tool** for scope selection:
 
-**If choice 4 (Custom)**:
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "Which items should I address?"
+      header: "Scope"
+      multiSelect: false
+      options:
+        - label: "Fix all"
+          description: "Bugs + improvements + enhancements"
+        - label: "Bugs + improvements"
+          description: "Skip nice-to-have enhancements"
+        - label: "Bugs only"
+          description: "Critical issues only"
+        - label: "Custom selection"
+          description: "I'll choose specific items"
 ```
-Select items to fix (comma-separated numbers):
-Example: 1,2,5,7
 
-Available items:
-[List all items with numbers]
+**If "Custom selection"**, present multi-select:
 
-Enter selection:
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "Which specific items should I fix?"
+      header: "Items"
+      multiSelect: true
+      options:
+        - label: "[Item 1 description]"
+          description: "[Category: Bug/Improvement/Enhancement]"
+        - label: "[Item 2 description]"
+          description: "[Category]"
+        # ... dynamically generated from feedback list
 ```
 
 ---
@@ -549,13 +570,23 @@ The executor will attempt to fix these issues.
 🔴 BLOCKED: Cannot complete feedback item
 
 Feedback item [N] could not be completed due to test failures.
+```
 
-Options:
-1. Skip this item and continue with others
-2. Stop feedback iteration (manual intervention needed)
-3. Mark as incomplete and continue
+**USE the AskUserQuestion tool**:
 
-Enter choice [1-3]:
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "How should we proceed with this blocked item?"
+      header: "Action"
+      multiSelect: false
+      options:
+        - label: "Skip and continue"
+          description: "Skip this item, proceed with other feedback"
+        - label: "Stop iteration"
+          description: "Manual intervention needed, pause here"
+        - label: "Mark incomplete"
+          description: "Mark as incomplete, continue with others"
 ```
 
 ---

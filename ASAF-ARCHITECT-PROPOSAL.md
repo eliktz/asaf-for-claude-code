@@ -320,7 +320,7 @@ Based on [Difficulty-Aware Agentic Orchestration](https://arxiv.org/html/2509.11
 | **Executor** | **Opus** | **Autonomous implementation over hours**, complex edge cases, sustained reasoning |
 | **Reviewer** | **Sonnet** (default) | Fast pattern-matching for validation, checklist-based |
 | **Reviewer (Educational)** | **Opus** | Deep explanations when teaching |
-| **Skills** | **Haiku** | Deterministic checks (build, lint, test), speed critical |
+| **Skills** | **Opus** | **Context-aware validation, intelligent error analysis, repo standards enforcement** |
 
 ### Why Executor Uses Opus
 
@@ -351,6 +351,60 @@ This is **long-horizon autonomous coding** - Opus's strength.
 If pinning needed: `**Model**: opus-4-5`
 
 **Fallback**: Configuration-based resolution in `.config.json`
+
+### Quality-First Philosophy
+
+**Why All Skills Use Opus**
+
+Initial consideration was to use Haiku for skills (fast, cheap, "deterministic checks"). However, this misunderstands what skills actually do:
+
+**Skills are NOT just command runners** - they're intelligent analyzers that:
+- **Understand** why builds fail (not just that they failed)
+- **Correlate** errors with repository standards
+- **Suggest** context-aware fixes based on codebase patterns
+- **Learn** from past mistakes and prevent repetition
+- **Evolve** standards as the codebase grows
+
+**Example**: Test failure
+
+**Haiku skill** (hypothetical):
+```
+❌ Tests failed: Cannot read property 'id' of undefined
+```
+
+**Opus skill** (actual):
+```
+❌ Tests failed (3/42)
+
+Root Cause: User object is null in authentication tests
+
+Why this happened:
+  - Registration endpoint now requires email verification (added in Task 2)
+  - Test fixtures create unverified users
+  - Auth middleware rejects unverified users (line 15)
+
+Fix:
+  Update tests/fixtures/users.ts:
+  - Add emailVerified: true to all user fixtures
+  - Or mock verification service in test setup
+
+Files to modify:
+  - tests/fixtures/users.ts (add field)
+  - tests/setup.ts (optional: mock email service)
+
+This pattern appears in:
+  - REPO-STANDARDS.md §3.2 (test data requirements)
+  - Similar issue in sprint: oauth-integration (resolved by mocking)
+```
+
+**The difference**: Opus provides **actionable intelligence**, not just error messages.
+
+**Cost-Benefit Analysis**:
+- Opus skill: Higher token cost per validation
+- Opus benefit: Fewer wasted iterations, faster fixes, learning over time
+- **Net result**: Lower total cost (fewer iterations) + higher quality
+
+This is the **quality-first approach**: Invest in intelligence upfront to save time and frustration later.
 
 ---
 
@@ -607,7 +661,7 @@ ASAF Configuration Wizard
    - Grooming: Opus (design conversations)
    - Executor: Opus (autonomous coding)
    - Reviewer: Sonnet (validation)
-   - Skills: Haiku (deterministic checks)
+   - Skills: Opus (intelligent analysis)
 
    1. Yes, use recommended (recommended)
    2. Customize
@@ -652,83 +706,154 @@ Skills are **reusable validation/execution modules** invoked by agents during wo
 
 #### 1. `asaf-quality-gate`
 
-**Purpose**: Validate build, tests, and linting
+**Purpose**: Comprehensive validation - build, tests, linting, AND repository standards
+
+**Model**: **Opus** (quality-first approach with intelligent analysis)
 
 **Auto-detection logic**:
 - Scans for `package.json`, `Cargo.toml`, `pom.xml`, etc.
 - Detects build commands from scripts
 - Identifies test framework
 - Finds linter configuration
+- Reads `asaf/REPO-STANDARDS.md` (if exists)
 
-**Execution**:
+**Three-Phase Execution**:
+
+**Phase 1: Build & Test (Execution)**
 ```
 1. Build
-   - Detected: package.json → npm run build
-   - Run: npm run build
-   - Result: ✅ Success (23 files)
+   - Auto-detected: package.json → npm run build
+   - Execute: npm run build
+   - Capture output
 
 2. Tests
-   - Detected: Jest
-   - Run: npm test
-   - Result: ✅ 42 passed, 0 failed
+   - Auto-detected: Jest
+   - Execute: npm test
+   - Capture results
 
 3. Linting
-   - Detected: ESLint
-   - Run: eslint src/
-   - Result: ✅ 0 errors, 2 warnings
+   - Auto-detected: ESLint
+   - Execute: eslint src/
+   - Capture errors/warnings
+```
+
+**Phase 2: Analysis (Opus Intelligence)**
+```
+If failures detected:
+  - Parse error messages for root causes
+  - Correlate with REPO-STANDARDS.md context
+  - Identify pattern violations
+  - Understand WHY it failed (not just THAT it failed)
+```
+
+**Phase 3: Reporting (Context-Aware)**
+```
+Example output (with intelligence):
+
+❌ Build failed: TypeScript error in src/auth/login.ts:42
+
+Error: Type 'Error' is not assignable to type 'Result<User, AuthError>'
+
+Root Cause Analysis:
+  - Code uses: throw new Error('User not found')
+  - Expected (per REPO-STANDARDS.md §2.3): Result<T, E> pattern
+  - This violates project error handling standard
+
+Context from codebase:
+  - 15 other files correctly use Result pattern
+  - This inconsistency will cause type errors
+
+Suggested fix:
+  ```typescript
+  // Current (violates standards):
+  if (!user) throw new Error('User not found');
+
+  // Fixed (follows REPO-STANDARDS.md):
+  if (!user) return Result.err(new AuthError('User not found'));
+  ```
+
+References:
+  - REPO-STANDARDS.md section 2.3 (Error Handling)
+  - Example: src/auth/register.ts:35 (correct pattern)
 ```
 
 **Invoked**: Automatically during `/asaf-impl` after each task
 
-**Model**: Haiku (fast, cheap, deterministic)
+**Why Opus**: Not just running commands - analyzing failures, understanding context, suggesting intelligent fixes
 
 ---
 
 #### 2. `asaf-repo-standards`
 
-**Purpose**: Enforce project-specific patterns
+**Purpose**: Deep pattern analysis and standards maintenance
+
+**Model**: **Opus** (sophisticated pattern recognition and learning)
 
 **Uses**: `asaf/REPO-STANDARDS.md`
 
-**Checks**:
-- Code patterns (custom Record implementations, error handling)
-- File organization (module structure, naming conventions)
-- Prohibited patterns (identified anti-patterns)
-- Consistency (similar problems solved similarly)
+**Relationship with quality-gate**:
+- `quality-gate`: Fast validation during each task (build + basic standards)
+- `repo-standards`: Comprehensive analysis during architect review (deep patterns)
 
-**Example validation**:
+**Deep Analysis Checks**:
+- **Pattern consistency** across entire codebase (not just changed files)
+- **Architectural compliance** (layering, dependencies, boundaries)
+- **Emerging anti-patterns** (detect before they spread)
+- **Standards evolution** (suggest updates to REPO-STANDARDS.md)
+
+**Example deep analysis**:
 ```
-Checking against REPO-STANDARDS.md...
+Comprehensive Standards Review (Opus-powered):
 
-Pattern Compliance:
-  ✅ Error handling uses Result<T,E> pattern
-  ❌ Data model doesn't extend BaseRecord
-     File: src/models/user.ts:5
-     Expected: class User extends BaseRecord<UserData>
-     Current: interface User { ... }
+Pattern Analysis:
+  ✅ Error handling: 95% compliance with Result<T,E> pattern
+     - 3 files still using throw (legacy code, documented)
+     - New code: 100% compliant
 
-File Organization:
-  ❌ API route in wrong location
-     File: src/api/login.ts
-     Expected: src/app/api/auth/login/route.ts
-     Reason: Next.js 13+ app router convention
+  ⚠️  Data models: Inconsistency detected
+     - Pattern A: Classes extending BaseRecord (12 files) ← Dominant
+     - Pattern B: Plain interfaces (8 files) ← Mixed with A
+     - Pattern C: Zod schemas (2 files) ← New pattern emerging
 
-Fix suggestions:
-  1. Refactor User to class extending BaseRecord
-  2. Move login.ts to correct app router location
+     Recommendation: Update REPO-STANDARDS.md to clarify:
+       - When to use each pattern
+       - Or standardize on one approach
+
+  ✅ File organization: 100% compliance with app router structure
+
+Architecture Insights:
+  ⚠️  Detected: 3 files in /components directly import from /lib/db
+     - Violates layering: components → services → db
+     - Files: src/components/UserList.tsx, DashboardWidget.tsx, AdminPanel.tsx
+     - Suggest: Create service layer methods instead
+
+Emerging Anti-patterns:
+  🔍 New pattern detected: Direct Prisma client usage in API routes
+     - Appeared in last 2 sprints
+     - Risk: Bypasses service layer validation
+     - Recommend: Add to REPO-STANDARDS.md as prohibited pattern
+
+Standards Update Suggestions:
+  1. Add section: "Data Model Patterns" (clarify A/B/C choice)
+  2. Add prohibition: "No direct DB access from components"
+  3. Add example: Service layer pattern for API routes
 ```
 
-**Created via**: `/asaf-standards-init` (guided wizard)
+**Created via**: `/asaf-standards-init` (guided wizard, creates initial template)
 
-**Invoked**: During `/asaf-architect-review`
+**Updated via**: Continuous learning during sprints + retros
 
-**Model**: Sonnet (pattern matching, structured checks)
+**Invoked**: During `/asaf-architect-review` (comprehensive post-sprint analysis)
+
+**Why Opus**: Deep pattern recognition, architectural understanding, learning from codebase evolution
 
 ---
 
 #### 3. `asaf-anti-regression`
 
-**Purpose**: Learn from past mistakes
+**Purpose**: Learn from past mistakes and prevent repetition
+
+**Model**: **Opus** (learning from patterns, contextual warnings)
 
 **Uses**: `asaf/MISTAKES-LOG.md` (generated from retros)
 
@@ -766,7 +891,7 @@ Based on past sprints, watch out for:
 - Before task (proactive warnings)
 - After task (check if repeated)
 
-**Model**: Sonnet (pattern recognition, learning)
+**Why Opus**: Understands context of current task, correlates with historical patterns, provides intelligent warnings
 
 ---
 
@@ -1012,7 +1137,7 @@ Command-line flags
     "executor": "opus",
     "reviewer": "sonnet",
     "reviewer_educational": "opus",
-    "skills": "haiku"
+    "skills": "opus"
   },
 
   "quality_gates": {
@@ -1383,13 +1508,66 @@ Created: asaf/.config.json
 Would you like to create repository standards? (y/n): y
 ```
 
+---
+
+### Repository Standards: Global Template + Project Refinement
+
+**Philosophy**: Start with sensible defaults, refine based on actual codebase.
+
+**Global Installation** (during `./install.sh`):
+```bash
+# Creates template
+~/.claude/asaf-repo-standards-template.md
+```
+
+**Template contents** (starting point):
+```markdown
+# Repository Standards Template
+
+## Code Quality Basics
+- Follow language-specific conventions
+- Write tests for new functionality
+- Run linter before committing
+- Use meaningful variable names
+
+## Error Handling
+[Will be customized per project]
+
+## Data Models
+[Will be customized per project]
+
+## File Organization
+[Will be customized per project]
+
+[Projects will customize via /asaf-standards-init wizard]
+```
+
+**Per-Project Initialization**:
+```bash
+cd ~/my-project
+/asaf-standards-init
+```
+
+**What the wizard does**:
+1. **Detects patterns** in existing codebase (Opus-powered analysis)
+2. **Asks questions** about which patterns to standardize
+3. **Generates** project-specific `asaf/REPO-STANDARDS.md`
+4. **Starts from** global template but adapts to YOUR code
+
+**Continuous Refinement**:
+- Quality-gate skill learns from usage
+- Repo-standards skill suggests updates during architect review
+- Retros identify new patterns to document
+- **REPO-STANDARDS.md evolves with your codebase**
+
 **Standards wizard**:
 ```
 /asaf-standards-init
 ```
 
 ```
-Analyzing codebase patterns...
+Starting from global template...
+Analyzing YOUR codebase patterns...
 
 Found 3 error handling patterns:
   1. try/catch with throw (15 files) ← Most common

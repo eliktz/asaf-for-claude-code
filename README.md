@@ -2,11 +2,52 @@
 
 **Structured workflow for coding tasks with AI agents**
 
-Version: 2.1.0 (Development Branch)
+Version: 2.2.0 (Development Branch)
 
 ---
 
-## 🆕 What's New in v2.1
+## 🆕 What's New in v2.2
+
+### PR Review Integration
+
+**Problem Solved**: After creating a PR, review comments come in but are handled ad-hoc - some answered, some forgotten, code changes made without proper testing or documentation.
+
+**New Command**: `/asaf-impl-pr-review`
+
+**What It Does**:
+1. **Fetches PR comments** from GitHub CLI, Bitbucket API, or Bitbucket MCP
+2. **Triages each comment** with you: Answer on PR / Create Task / Ignore
+3. **Posts answers** - drafts response, you approve, posts immediately
+4. **Defines tasks** - AI proposes task from comment, you confirm/modify
+5. **Executes tasks** with full quality gates (executor → reviewer loop)
+6. **Documents everything** in `progress.md` with PR Review Round sections
+
+**Multi-Platform Support**:
+| Platform | Auth | How It Works |
+|----------|------|--------------|
+| GitHub | `gh auth login` | Uses GitHub CLI |
+| Bitbucket API | Token in env var | Uses REST API 2.0 |
+| Bitbucket MCP | MCP config | Uses MCP server tools |
+
+**Workflow**:
+```bash
+# After creating PR and receiving review comments
+/asaf-impl-pr-review
+
+# Can run multiple times as new comments arrive
+/asaf-impl-pr-review
+```
+
+**Comment Tracking**:
+- Tracks which comments were handled across sessions
+- Shows "✓ HANDLED" markers on processed comments
+- Platform IDs stored in `progress.md` for accurate tracking
+
+**Impact**: Zero forgotten PR comments, consistent quality for all code changes from reviews.
+
+---
+
+## What's in v2.1
 
 ### Build Validation Integration
 
@@ -112,17 +153,30 @@ ASAF is a set of Claude Code slash commands that provide:
 # 1. Initialize a sprint
 /asaf-init add-authentication
 
-# 2. Design it (30-45 min conversation)
+# 2. Design it (5-45 min depending on complexity)
 /asaf-groom
 
 # 3. Approve and plan
 /asaf-groom-approve
 
-# 4. Implement (3-6 hours, autonomous)
+# 4. Implement (autonomous with quality gates)
 /asaf-impl
 
-# 5. Check status anytime
-/asaf-status
+# 5. Create PR and handle review comments
+git push && gh pr create
+/asaf-impl-pr-review   # Handle PR comments systematically
+
+# 6. Generate demo and retrospective
+/asaf-demo
+/asaf-retro
+```
+
+**Complete Workflow**:
+```
+Init → Groom → Plan → Implement → PR Review → Demo → Retro
+                          ↑           ↓
+                          └───────────┘
+                         (iterate on PR feedback)
 ```
 
 ---
@@ -264,43 +318,65 @@ touch personal-goals.md
 
 ---
 
-### Quick Install Script (Global)
+### Quick Install Script (Global) ⭐ Recommended
 
 ```bash
-# One-liner for global installation
-curl -fsSL https://raw.githubusercontent.com/your-repo/asaf/main/install.sh | bash
-```
-
-**Or manually**:
-```bash
-# Download and install
-cd /tmp
+# Clone and install
 git clone https://github.com/your-repo/asaf.git
 cd asaf
 ./install.sh
 ```
 
+**What `install.sh` does**:
+- Creates `~/.claude/commands/` and `~/.claude/agents/` directories
+- Copies all ASAF command files (20+ commands)
+- Copies shared agent personas
+- Copies demo templates
+- Copies sub-agent definitions (TypeScript, Python, Java executors)
+
+**After installation**:
+```bash
+# Use in any project
+cd your-project/
+/asaf-init my-feature
+```
+
+**Update existing installation**:
+```bash
+cd asaf
+git pull
+./install.sh  # Will prompt to overwrite
+```
+
 ---
 
-## MVP Commands Available
+## Commands Available
 
 ### Core Workflow
 - `/asaf-init <name>` - Initialize new sprint
-- `/asaf-groom` - Collaborative design (30-45 min)
+- `/asaf-groom` - Collaborative design (Quick/Standard/Deep modes)
 - `/asaf-groom-approve` - Lock grooming, create tasks
-- `/asaf-status` - Show current status
-- `/asaf-select [sprint-name]` - Select active sprint (interactive if no name)
+- `/asaf-impl` - Autonomous implementation with executor/reviewer loop
+- `/asaf-impl-pause` / `/asaf-impl-resume` - Control execution
+- `/asaf-impl-feedback` - Handle post-implementation changes
+- `/asaf-impl-pr-review` - **NEW** Handle PR review comments systematically
+- `/asaf-demo` - Generate audience-specific presentations
+- `/asaf-retro` - Retrospective with velocity analysis
 
-### Coming in Phase 2-6
-- `/asaf-impl` - Run implementation (needs completion)
-- `/asaf-impl-pause` - Pause implementation
-- `/asaf-impl-resume` - Resume paused sprint
+### Sprint Management
+- `/asaf-status` - Show current sprint status
+- `/asaf-select [sprint-name]` - Select active sprint (interactive if no name)
+- `/asaf-list` - List all sprints with stats
+- `/asaf-summary` - View sprint summary
+
+### Quick Tasks
+- `/asaf-express "<description>"` - Quick task workflow
+- `/asaf-express --auto` - Fully autonomous for trivial tasks
+
+### Utilities
+- `/asaf-help [topic]` - Complete help system
 - `/asaf-impl-review` - Review blocked tasks
-- `/asaf-express` - Quick task mode
-- `/asaf-demo` - Generate demo
-- `/asaf-retro` - Retrospective
-- `/asaf-list` - List all sprints
-- `/asaf-summary` - View summary
+- `/asaf-impl-approve` - Approve implementation
 
 ---
 
@@ -691,7 +767,7 @@ Add to `.gitignore` (recommended for solo work):
 - [x] `executor-agent.md` - Implementation agent persona
 - [x] `reviewer-agent.md` - Code review agent persona
 
-**Full Workflow Commands (11 files)**:
+**Full Workflow Commands (13 files)**:
 - [x] `asaf-init.md` - Initialize sprint
 - [x] `asaf-groom.md` - Grooming conversation
 - [x] `asaf-groom-approve.md` - Approve grooming & plan
@@ -699,6 +775,8 @@ Add to `.gitignore` (recommended for solo work):
 - [x] `asaf-impl-pause.md` - Pause implementation
 - [x] `asaf-impl-resume.md` - Resume paused implementation
 - [x] `asaf-impl-review.md` - Review blocked tasks
+- [x] `asaf-impl-feedback.md` - Post-implementation feedback
+- [x] `asaf-impl-pr-review.md` - **NEW** Handle PR review comments
 - [x] `asaf-impl-approve.md` - Approve implementation
 - [x] `asaf-demo.md` - Generate demo presentation
 - [x] `asaf-retro.md` - Retrospective conversation
@@ -716,7 +794,7 @@ Add to `.gitignore` (recommended for solo work):
 - [x] `install.sh` - Global installation script
 - [x] `uninstall.sh` - Uninstall script
 
-**Total**: 23 files ready for production use!
+**Total**: 25+ files ready for production use!
 
 ### 🎯 Optional Enhancements (Future)
 - [ ] `/asaf-resume <sprint>` - Resume old sprint (referenced but not critical)
@@ -996,33 +1074,44 @@ nano asaf/your-sprint/.state.json
 
 ## Version History
 
-### 1.0.0 (Current - Production Ready!)
+### 2.2.0 (Current)
+- ✅ **PR Review Integration** - `/asaf-impl-pr-review` command
+- ✅ Multi-platform support (GitHub CLI, Bitbucket API, Bitbucket MCP)
+- ✅ Comment triage workflow (Answer/Task/Ignore)
+- ✅ Automatic answer drafting and posting
+- ✅ Task derivation from PR comments with quality gates
+- ✅ Multi-round support with comment tracking
+
+### 2.1.0
+- ✅ Build validation integration (pre-flight, post-task, final gates)
+- ✅ Technical Acceptance Criteria (5 mandatory TACs)
+- ✅ Interactive prompts using AskUserQuestion tool
+
+### 2.0.0
+- ✅ Modular grooming (Quick/Standard/Deep modes)
+- ✅ Focused edge case discovery
+- ✅ Story points system with velocity tracking
+- ✅ Post-implementation feedback loop
+- ✅ Sprint selection state management
+- ✅ Demo customization system
+
+### 1.0.0 (Production Ready)
 - ✅ Complete workflow (init → groom → implement → demo → retro)
 - ✅ Implementation with executor/reviewer loop
 - ✅ Pause/resume functionality
 - ✅ Blocked task review and recovery
 - ✅ Express mode for quick tasks
-- ✅ Auto mode for trivial tasks
 - ✅ Demo generation
 - ✅ Retrospective with learning tracking
 - ✅ Personal goals integration
 - ✅ Complete help system
-- ✅ Sprint list management
-- ✅ Global and local installation
-- ✅ 22 complete command files
-- ✅ Full documentation
+- ✅ 22+ command files
 
-### Planned: 1.1.0
-- Additional executor profiles (Python, Rust, Go)
-- More reviewer mode variations
+### Planned: 2.3.0
+- GitLab and Azure DevOps support for PR review
+- Auto-resolve PR comments after task completion
 - Sprint templates
 - Enhanced analytics
-
-### Planned: 1.2.0
-- Team collaboration features
-- Sprint sharing
-- Advanced metrics
-- AI-suggested improvements
 
 ---
 

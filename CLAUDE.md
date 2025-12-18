@@ -56,6 +56,7 @@ asaf/
 │       ├── asaf-impl-pause.md
 │       ├── asaf-impl-resume.md
 │       ├── asaf-impl-review.md
+│       ├── asaf-impl-pr-review.md
 │       ├── asaf-impl-approve.md
 │       ├── asaf-express.md
 │       ├── asaf-demo.md
@@ -94,7 +95,7 @@ user-project/
 │   │   │   ├── design.md
 │   │   │   ├── edge-cases.md   # Min 10 edge cases
 │   │   │   ├── acceptance-criteria.md  # Min 5 criteria
-│   │   │   ├── decisions.md     # Technical choices + executor/reviewer config
+│   │   │   ├── decisions.md     # Technical choices + executor/reviewer config + PR config
 │   │   │   └── conversation-log.md
 │   │   ├── implementation/  # Execution phase
 │   │   │   ├── tasks.md
@@ -237,6 +238,7 @@ For each task:
 - `/asaf-impl` - Autonomous implementation (3-6 hours)
 - `/asaf-impl-pause` / `/asaf-impl-resume` - Control execution
 - `/asaf-impl-feedback` - Structured post-implementation changes with quality gates
+- `/asaf-impl-pr-review` - Handle PR review comments systematically (answer/task/ignore)
 - `/asaf-status` - Current sprint state (shows selected sprint prominently)
 - `/asaf-demo` - Generate demo presentation
 - `/asaf-retro` - Learning retrospective
@@ -1345,7 +1347,7 @@ All documents generated during `/asaf-groom`:
 - **design.md** - Architecture, components, data models, user flows, security
 - **edge-cases.md** - Minimum 10 scenarios (Input, Auth, System Errors, Security, Performance)
 - **acceptance-criteria.md** - Minimum 5 testable criteria
-- **decisions.md** - Technical choices with alternatives + rationale, executor/reviewer config
+- **decisions.md** - Technical choices with alternatives + rationale, executor/reviewer config, PR config
 - **conversation-log.md** - Full Q&A transcript
 
 ### Implementation Phase Outputs
